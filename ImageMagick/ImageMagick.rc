@@ -23,7 +23,7 @@ BEGIN
             VALUE "OriginalFilename", "aom\0"
             VALUE "InternalName", "ImageMagick Studio\0"
             VALUE "FileVersion", DELEGATE_VERSION_STRING "\0"
-            VALUE "ProductVersion", ssssssssssssssssVERSION_STRING "\0"
+            VALUE "ProductVersion", VERSION_STRING "\0"
             VALUE "CompanyName", "Alliance for Open Media\0"
             VALUE "LegalCopyright", "Copyright (c) 2016, Alliance for Open Media.\0"
             VALUE "Comments", "https://aomedia.googlesource.com/aom/\0"
