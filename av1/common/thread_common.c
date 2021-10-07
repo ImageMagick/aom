@@ -33,6 +33,7 @@ static INLINE int get_sync_range(int width) {
     return 8;
 }
 
+#if !CONFIG_REALTIME_ONLY
 static INLINE int get_lr_sync_range(int width) {
 #if 0
   // nsync numbers are picked by testing. For example, for 4k
@@ -50,6 +51,7 @@ static INLINE int get_lr_sync_range(int width) {
   return 1;
 #endif
 }
+#endif
 
 // Allocate memory for lf row synchronization
 static void loop_filter_alloc(AV1LfSync *lf_sync, AV1_COMMON *cm, int rows,
@@ -442,7 +444,7 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                   plane_start, plane_end);
 
   // Set up loopfilter thread data.
-  for (i = 0; i < num_workers; ++i) {
+  for (i = num_workers - 1; i >= 0; --i) {
     AVxWorker *const worker = &workers[i];
     LFWorkerData *const lf_data = &lf_sync->lfdata[i];
 
@@ -462,7 +464,7 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
     loop_filter_data_reset(lf_data, frame, cm, xd);
 
     // Start loopfiltering
-    if (i == num_workers - 1) {
+    if (i == 0) {
       winterface->execute(worker);
     } else {
       winterface->launch(worker);
@@ -528,6 +530,7 @@ void av1_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
 #endif
 }
 
+#if !CONFIG_REALTIME_ONLY
 static INLINE void lr_sync_read(void *const lr_sync, int r, int c, int plane) {
 #if CONFIG_MULTITHREAD
   AV1LrSync *const loop_res_sync = (AV1LrSync *)lr_sync;
@@ -891,15 +894,15 @@ static void foreach_rest_unit_in_planes_mt(AV1LrStruct *lr_ctxt,
   enqueue_lr_jobs(lr_sync, lr_ctxt, cm);
 
   // Set up looprestoration thread data.
-  for (i = 0; i < num_workers; ++i) {
+  for (i = num_workers - 1; i >= 0; --i) {
     AVxWorker *const worker = &workers[i];
     lr_sync->lrworkerdata[i].lr_ctxt = (void *)lr_ctxt;
     worker->hook = loop_restoration_row_worker;
     worker->data1 = lr_sync;
     worker->data2 = &lr_sync->lrworkerdata[i];
 
-    // Start loopfiltering
-    if (i == num_workers - 1) {
+    // Start loop restoration
+    if (i == 0) {
       winterface->execute(worker);
     } else {
       winterface->launch(worker);
@@ -928,3 +931,4 @@ void av1_loop_restoration_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
   foreach_rest_unit_in_planes_mt(loop_rest_ctxt, workers, num_workers, lr_sync,
                                  cm);
 }
+#endif

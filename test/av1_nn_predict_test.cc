@@ -70,6 +70,7 @@ class NnPredictTest : public ::testing::TestWithParam<NnPredictTestParam> {
   float *bias[NN_MAX_HIDDEN_LAYERS + 1] = { 0 };
   float *weights_buf = nullptr, *bias_buf = nullptr;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(NnPredictTest);
 
 void NnPredictTest::RunNnPredictTest(const NN_CONFIG *const shape) {
   libaom_test::ClearSystemState();
@@ -209,9 +210,14 @@ TEST_P(NnPredictTest, DISABLED_Speed) {
   RunNnPredictSpeedTest_all(shapes, sizeof(shapes) / sizeof(*shapes), 10000000);
 }
 
-#if HAVE_SSE3
+#if HAVE_SSE3 && !CONFIG_EXCLUDE_SIMD_MISMATCH
 INSTANTIATE_TEST_SUITE_P(SSE3, NnPredictTest,
                          ::testing::Values(av1_nn_predict_sse3));
+#endif
+
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(NEON, NnPredictTest,
+                         ::testing::Values(av1_nn_predict_neon));
 #endif
 
 }  // namespace

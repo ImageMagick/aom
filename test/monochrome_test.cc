@@ -28,10 +28,7 @@ class MonochromeTest
 
   virtual ~MonochromeTest() {}
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(GET_PARAM(1));
-  }
+  virtual void SetUp() { InitializeConfig(GET_PARAM(1)); }
 
   virtual void DecompressedFrameHook(const aom_image_t &img,
                                      aom_codec_pts_t pts) {
@@ -124,7 +121,8 @@ TEST_P(MonochromeTest, TestMonochromeEncoding) {
   }
 }
 
-AV1_INSTANTIATE_TEST_CASE(MonochromeTest,
-                          ::testing::Values(::libaom_test::kTwoPassGood));
+AV1_INSTANTIATE_TEST_SUITE(MonochromeTest,
+                           ::testing::Values(::libaom_test::kOnePassGood,
+                                             ::libaom_test::kTwoPassGood));
 
 }  // namespace

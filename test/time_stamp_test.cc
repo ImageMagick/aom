@@ -74,10 +74,7 @@ class TimestampTest
   TimestampTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~TimestampTest() {}
 
-  virtual void SetUp() {
-    InitializeConfig();
-    SetMode(GET_PARAM(1));
-  }
+  virtual void SetUp() { InitializeConfig(GET_PARAM(1)); }
 };
 
 // Tests encoding in millisecond timebase.
@@ -99,7 +96,7 @@ TEST_P(TimestampTest, TestAv1Rollover) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
-AV1_INSTANTIATE_TEST_CASE(TimestampTest,
-                          ::testing::Values(::libaom_test::kTwoPassGood));
+AV1_INSTANTIATE_TEST_SUITE(TimestampTest,
+                           ::testing::Values(::libaom_test::kTwoPassGood));
 
 }  // namespace

@@ -28,8 +28,7 @@ class AqSegmentTest
   virtual ~AqSegmentTest() {}
 
   virtual void SetUp() {
-    InitializeConfig();
-    SetMode(GET_PARAM(1));
+    InitializeConfig(GET_PARAM(1));
     set_cpu_used_ = GET_PARAM(2);
     aq_mode_ = 0;
   }
@@ -86,12 +85,12 @@ TEST_P(AqSegmentTest, TestNoMisMatchExtDeltaQ) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
-AV1_INSTANTIATE_TEST_CASE(AqSegmentTest,
-                          ::testing::Values(::libaom_test::kRealTime,
-                                            ::libaom_test::kOnePassGood),
-                          ::testing::Range(5, 9), ::testing::Range(0, 4));
-AV1_INSTANTIATE_TEST_CASE(AqSegmentTestLarge,
-                          ::testing::Values(::libaom_test::kRealTime,
-                                            ::libaom_test::kOnePassGood),
-                          ::testing::Range(3, 5), ::testing::Range(0, 4));
+AV1_INSTANTIATE_TEST_SUITE(AqSegmentTest,
+                           ::testing::Values(::libaom_test::kRealTime,
+                                             ::libaom_test::kOnePassGood),
+                           ::testing::Range(5, 9), ::testing::Range(0, 4));
+AV1_INSTANTIATE_TEST_SUITE(AqSegmentTestLarge,
+                           ::testing::Values(::libaom_test::kRealTime,
+                                             ::libaom_test::kOnePassGood),
+                           ::testing::Range(3, 5), ::testing::Range(0, 4));
 }  // namespace

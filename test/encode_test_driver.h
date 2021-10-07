@@ -28,7 +28,7 @@ namespace libaom_test {
 class CodecFactory;
 class VideoSource;
 
-enum TestMode { kRealTime, kOnePassGood, kTwoPassGood };
+enum TestMode { kRealTime, kOnePassGood, kTwoPassGood, kAllIntra };
 #define ALL_TEST_MODES                                                     \
   ::testing::Values(::libaom_test::kRealTime, ::libaom_test::kOnePassGood, \
                     ::libaom_test::kTwoPassGood)
@@ -186,11 +186,9 @@ class EncoderTest {
 
   virtual ~EncoderTest() {}
 
-  // Initialize the cfg_ member with the default configuration.
-  void InitializeConfig();
-
-  // Map the TestMode enum to the passes_ variables.
-  void SetMode(TestMode mode);
+  // Initialize the cfg_ member with the default configuration for the
+  // TestMode enum and maps the TestMode enum to the passes_ variable.
+  void InitializeConfig(TestMode mode);
 
   // Set encoder flag.
   void set_init_flags(aom_codec_flags_t flag) { init_flags_ = flag; }
@@ -214,6 +212,9 @@ class EncoderTest {
 
   // Hook to be called on every PSNR packet.
   virtual void PSNRPktHook(const aom_codec_cx_pkt_t * /*pkt*/) {}
+
+  // Hook to be called on every first pass stats packet.
+  virtual void StatsPktHook(const aom_codec_cx_pkt_t * /*pkt*/) {}
 
   // Hook to determine whether the encode loop should continue.
   virtual bool Continue() const {

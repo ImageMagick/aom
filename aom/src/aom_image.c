@@ -38,6 +38,8 @@ static aom_image_t *img_alloc_helper(
   unsigned int h, w, s, xcs, ycs, bps, bit_depth;
   unsigned int stride_in_bytes;
 
+  if (img != NULL) memset(img, 0, sizeof(aom_image_t));
+
   /* Treat align==0 like align==1 */
   if (!buf_align) buf_align = 1;
 
@@ -111,8 +113,6 @@ static aom_image_t *img_alloc_helper(
     if (!img) goto fail;
 
     img->self_allocd = 1;
-  } else {
-    memset(img, 0, sizeof(aom_image_t));
   }
 
   img->img_data = img_data;
@@ -350,26 +350,18 @@ int aom_img_add_metadata(aom_image_t *img, uint32_t type, const uint8_t *data,
   }
   aom_metadata_t *metadata =
       aom_img_metadata_alloc(type, data, sz, insert_flag);
-  if (!metadata) goto fail;
-  if (!img->metadata->metadata_array) {
-    img->metadata->metadata_array =
-        (aom_metadata_t **)calloc(1, sizeof(metadata));
-    if (!img->metadata->metadata_array || img->metadata->sz != 0) {
-      aom_img_metadata_free(metadata);
-      goto fail;
-    }
-  } else {
-    img->metadata->metadata_array =
-        (aom_metadata_t **)realloc(img->metadata->metadata_array,
-                                   (img->metadata->sz + 1) * sizeof(metadata));
+  if (!metadata) return -1;
+  aom_metadata_t **metadata_array =
+      (aom_metadata_t **)realloc(img->metadata->metadata_array,
+                                 (img->metadata->sz + 1) * sizeof(metadata));
+  if (!metadata_array) {
+    aom_img_metadata_free(metadata);
+    return -1;
   }
+  img->metadata->metadata_array = metadata_array;
   img->metadata->metadata_array[img->metadata->sz] = metadata;
   img->metadata->sz++;
   return 0;
-fail:
-  aom_img_metadata_array_free(img->metadata);
-  img->metadata = NULL;
-  return -1;
 }
 
 void aom_img_remove_metadata(aom_image_t *img) {

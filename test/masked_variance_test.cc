@@ -56,6 +56,7 @@ class MaskedSubPixelVarianceTest
   MaskedSubPixelVarianceFunc opt_func_;
   MaskedSubPixelVarianceFunc ref_func_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(MaskedSubPixelVarianceTest);
 
 TEST_P(MaskedSubPixelVarianceTest, OperationCheck) {
   unsigned int ref_ret, opt_ret;
@@ -193,6 +194,7 @@ class HighbdMaskedSubPixelVarianceTest
   MaskedSubPixelVarianceFunc ref_func_;
   aom_bit_depth_t bit_depth_;
 };
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(HighbdMaskedSubPixelVarianceTest);
 
 TEST_P(HighbdMaskedSubPixelVarianceTest, OperationCheck) {
   unsigned int ref_ret, opt_ret;
@@ -352,7 +354,7 @@ const MaskedSubPixelVarianceParam sub_pel_var_test[] = {
              &aom_masked_sub_pixel_variance4x8_c),
   make_tuple(&aom_masked_sub_pixel_variance4x4_ssse3,
              &aom_masked_sub_pixel_variance4x4_c),
-
+#if !CONFIG_REALTIME_ONLY
   make_tuple(&aom_masked_sub_pixel_variance64x16_ssse3,
              &aom_masked_sub_pixel_variance64x16_c),
   make_tuple(&aom_masked_sub_pixel_variance16x64_ssse3,
@@ -365,6 +367,7 @@ const MaskedSubPixelVarianceParam sub_pel_var_test[] = {
              &aom_masked_sub_pixel_variance16x4_c),
   make_tuple(&aom_masked_sub_pixel_variance4x16_ssse3,
              &aom_masked_sub_pixel_variance4x16_c),
+#endif
 };
 
 INSTANTIATE_TEST_SUITE_P(SSSE3_C_COMPARE, MaskedSubPixelVarianceTest,
@@ -468,7 +471,7 @@ const HighbdMaskedSubPixelVarianceParam hbd_sub_pel_var_test[] = {
              &aom_highbd_12_masked_sub_pixel_variance4x8_c, AOM_BITS_12),
   make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x4_ssse3,
              &aom_highbd_12_masked_sub_pixel_variance4x4_c, AOM_BITS_12),
-
+#if !CONFIG_REALTIME_ONLY
   make_tuple(&aom_highbd_8_masked_sub_pixel_variance64x16_ssse3,
              &aom_highbd_8_masked_sub_pixel_variance64x16_c, AOM_BITS_8),
   make_tuple(&aom_highbd_8_masked_sub_pixel_variance16x64_ssse3,
@@ -505,6 +508,7 @@ const HighbdMaskedSubPixelVarianceParam hbd_sub_pel_var_test[] = {
              &aom_highbd_12_masked_sub_pixel_variance16x4_c, AOM_BITS_12),
   make_tuple(&aom_highbd_12_masked_sub_pixel_variance4x16_ssse3,
              &aom_highbd_12_masked_sub_pixel_variance4x16_c, AOM_BITS_12),
+#endif
 };
 
 INSTANTIATE_TEST_SUITE_P(SSSE3_C_COMPARE, HighbdMaskedSubPixelVarianceTest,

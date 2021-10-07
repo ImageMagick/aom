@@ -49,6 +49,10 @@ static INLINE int av1_is_directional_mode(PREDICTION_MODE mode) {
   return mode >= V_PRED && mode <= D67_PRED;
 }
 
+static INLINE int av1_is_diagonal_mode(PREDICTION_MODE mode) {
+  return mode >= D45_PRED && mode <= D67_PRED;
+}
+
 static INLINE int av1_use_angle_delta(BLOCK_SIZE bsize) {
   return bsize >= BLOCK_8X8;
 }
@@ -69,7 +73,7 @@ static INLINE int av1_filter_intra_allowed(const AV1_COMMON *const cm,
                                            const MB_MODE_INFO *mbmi) {
   return mbmi->mode == DC_PRED &&
          mbmi->palette_mode_info.palette_size[0] == 0 &&
-         av1_filter_intra_allowed_bsize(cm, mbmi->sb_type);
+         av1_filter_intra_allowed_bsize(cm, mbmi->bsize);
 }
 
 extern const int8_t av1_filter_intra_taps[FILTER_INTRA_MODES][8][8];

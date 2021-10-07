@@ -17,6 +17,7 @@
 #include "config/av1_rtcd.h"
 
 #include "aom_dsp/blend.h"
+#include "aom_dsp/x86/mem_sse2.h"
 #include "aom_dsp/x86/synonyms.h"
 
 #include "aom_ports/mem.h"
@@ -42,8 +43,8 @@ unsigned int aom_get_mb_ss_sse2(const int16_t *src) {
 }
 
 static INLINE __m128i load4x2_sse2(const uint8_t *const p, const int stride) {
-  const __m128i p0 = _mm_cvtsi32_si128(*(const uint32_t *)(p + 0 * stride));
-  const __m128i p1 = _mm_cvtsi32_si128(*(const uint32_t *)(p + 1 * stride));
+  const __m128i p0 = _mm_cvtsi32_si128(loadu_uint32(p + 0 * stride));
+  const __m128i p1 = _mm_cvtsi32_si128(loadu_uint32(p + 1 * stride));
   return _mm_unpacklo_epi8(_mm_unpacklo_epi32(p0, p1), _mm_setzero_si128());
 }
 
@@ -267,17 +268,20 @@ AOM_VAR_NO_LOOP_SSE2(4, 16, 6, 128);
 AOM_VAR_NO_LOOP_SSE2(8, 4, 5, 128);
 AOM_VAR_NO_LOOP_SSE2(8, 8, 6, 128);
 AOM_VAR_NO_LOOP_SSE2(8, 16, 7, 128);
-AOM_VAR_NO_LOOP_SSE2(8, 32, 8, 256);
 
-AOM_VAR_NO_LOOP_SSE2(16, 4, 6, 128);
 AOM_VAR_NO_LOOP_SSE2(16, 8, 7, 128);
 AOM_VAR_NO_LOOP_SSE2(16, 16, 8, 256);
 AOM_VAR_NO_LOOP_SSE2(16, 32, 9, 512);
-AOM_VAR_NO_LOOP_SSE2(16, 64, 10, 1024);
 
 AOM_VAR_NO_LOOP_SSE2(32, 8, 8, 256);
 AOM_VAR_NO_LOOP_SSE2(32, 16, 9, 512);
 AOM_VAR_NO_LOOP_SSE2(32, 32, 10, 1024);
+
+#if !CONFIG_REALTIME_ONLY
+AOM_VAR_NO_LOOP_SSE2(16, 4, 6, 128);
+AOM_VAR_NO_LOOP_SSE2(8, 32, 8, 256);
+AOM_VAR_NO_LOOP_SSE2(16, 64, 10, 1024);
+#endif
 
 #define AOM_VAR_LOOP_SSE2(bw, bh, bits, uh)                                   \
   unsigned int aom_variance##bw##x##bh##_sse2(                                \
@@ -302,13 +306,16 @@ AOM_VAR_NO_LOOP_SSE2(32, 32, 10, 1024);
 
 AOM_VAR_LOOP_SSE2(32, 64, 11, 32);  // 32x32 * ( 64/32 )
 
-AOM_VAR_NO_LOOP_SSE2(64, 16, 10, 1024);
 AOM_VAR_LOOP_SSE2(64, 32, 11, 16);   // 64x16 * ( 32/16 )
 AOM_VAR_LOOP_SSE2(64, 64, 12, 16);   // 64x16 * ( 64/16 )
 AOM_VAR_LOOP_SSE2(64, 128, 13, 16);  // 64x16 * ( 128/16 )
 
 AOM_VAR_LOOP_SSE2(128, 64, 13, 8);   // 128x8 * ( 64/8 )
 AOM_VAR_LOOP_SSE2(128, 128, 14, 8);  // 128x8 * ( 128/8 )
+
+#if !CONFIG_REALTIME_ONLY
+AOM_VAR_NO_LOOP_SSE2(64, 16, 10, 1024);
+#endif
 
 unsigned int aom_mse8x8_sse2(const uint8_t *src, int src_stride,
                              const uint8_t *ref, int ref_stride,
@@ -383,6 +390,7 @@ DECLS(ssse3);
     return sse - (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2));  \
   }
 
+#if !CONFIG_REALTIME_ONLY
 #define FNS(opt)                                     \
   FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
   FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
@@ -406,6 +414,25 @@ DECLS(ssse3);
   FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t));   \
   FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t));   \
   FN(64, 16, 16, 6, 4, opt, (int64_t), (int64_t))
+#else
+#define FNS(opt)                                     \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t));  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t));   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t));   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t));   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t));   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t));   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t));  \
+  FN(16, 8, 16, 4, 3, opt, (int32_t), (int32_t));    \
+  FN(8, 16, 8, 3, 4, opt, (int32_t), (int32_t));     \
+  FN(8, 8, 8, 3, 3, opt, (int32_t), (int32_t));      \
+  FN(8, 4, 8, 3, 2, opt, (int32_t), (int32_t));      \
+  FN(4, 8, 4, 2, 3, opt, (int32_t), (int32_t));      \
+  FN(4, 4, 4, 2, 2, opt, (int32_t), (int32_t));
+#endif
 
 FNS(sse2);
 FNS(ssse3);
@@ -462,6 +489,7 @@ DECLS(ssse3);
     return sse - (unsigned int)(cast_prod(cast se * se) >> (wlog2 + hlog2)); \
   }
 
+#if !CONFIG_REALTIME_ONLY
 #define FNS(opt)                                     \
   FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
   FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
@@ -485,6 +513,25 @@ DECLS(ssse3);
   FN(32, 8, 16, 5, 3, opt, (uint32_t), (int64_t));   \
   FN(16, 64, 16, 4, 6, opt, (int64_t), (int64_t));   \
   FN(64, 16, 16, 6, 4, opt, (int64_t), (int64_t))
+#else
+#define FNS(opt)                                     \
+  FN(128, 128, 16, 7, 7, opt, (int64_t), (int64_t)); \
+  FN(128, 64, 16, 7, 6, opt, (int64_t), (int64_t));  \
+  FN(64, 128, 16, 6, 7, opt, (int64_t), (int64_t));  \
+  FN(64, 64, 16, 6, 6, opt, (int64_t), (int64_t));   \
+  FN(64, 32, 16, 6, 5, opt, (int64_t), (int64_t));   \
+  FN(32, 64, 16, 5, 6, opt, (int64_t), (int64_t));   \
+  FN(32, 32, 16, 5, 5, opt, (int64_t), (int64_t));   \
+  FN(32, 16, 16, 5, 4, opt, (int64_t), (int64_t));   \
+  FN(16, 32, 16, 4, 5, opt, (int64_t), (int64_t));   \
+  FN(16, 16, 16, 4, 4, opt, (uint32_t), (int64_t));  \
+  FN(16, 8, 16, 4, 3, opt, (uint32_t), (int32_t));   \
+  FN(8, 16, 8, 3, 4, opt, (uint32_t), (int32_t));    \
+  FN(8, 8, 8, 3, 3, opt, (uint32_t), (int32_t));     \
+  FN(8, 4, 8, 3, 2, opt, (uint32_t), (int32_t));     \
+  FN(4, 8, 4, 2, 3, opt, (uint32_t), (int32_t));     \
+  FN(4, 4, 4, 2, 2, opt, (uint32_t), (int32_t));
+#endif
 
 FNS(sse2);
 FNS(ssse3);
@@ -727,31 +774,131 @@ void aom_highbd_comp_mask_pred_sse2(uint8_t *comp_pred8, const uint8_t *pred8,
       comp_pred += width;
       i += 1;
     } while (i < height);
-  } else if (width == 32) {
+  } else {
     do {
-      for (int j = 0; j < 2; j++) {
-        const __m128i s0 = _mm_loadu_si128((const __m128i *)(src0 + j * 16));
-        const __m128i s2 =
-            _mm_loadu_si128((const __m128i *)(src0 + 8 + j * 16));
-        const __m128i s1 = _mm_loadu_si128((const __m128i *)(src1 + j * 16));
-        const __m128i s3 =
-            _mm_loadu_si128((const __m128i *)(src1 + 8 + j * 16));
+      for (int x = 0; x < width; x += 32) {
+        for (int j = 0; j < 2; j++) {
+          const __m128i s0 =
+              _mm_loadu_si128((const __m128i *)(src0 + x + j * 16));
+          const __m128i s2 =
+              _mm_loadu_si128((const __m128i *)(src0 + x + 8 + j * 16));
+          const __m128i s1 =
+              _mm_loadu_si128((const __m128i *)(src1 + x + j * 16));
+          const __m128i s3 =
+              _mm_loadu_si128((const __m128i *)(src1 + x + 8 + j * 16));
 
-        const __m128i m_8 = _mm_loadu_si128((const __m128i *)(mask + j * 16));
-        const __m128i m01_16 = _mm_unpacklo_epi8(m_8, zero);
-        const __m128i m23_16 = _mm_unpackhi_epi8(m_8, zero);
+          const __m128i m_8 =
+              _mm_loadu_si128((const __m128i *)(mask + x + j * 16));
+          const __m128i m01_16 = _mm_unpacklo_epi8(m_8, zero);
+          const __m128i m23_16 = _mm_unpackhi_epi8(m_8, zero);
 
-        const __m128i comp = highbd_comp_mask_pred_line_sse2(s0, s1, m01_16);
-        const __m128i comp1 = highbd_comp_mask_pred_line_sse2(s2, s3, m23_16);
+          const __m128i comp = highbd_comp_mask_pred_line_sse2(s0, s1, m01_16);
+          const __m128i comp1 = highbd_comp_mask_pred_line_sse2(s2, s3, m23_16);
 
-        _mm_storeu_si128((__m128i *)(comp_pred + j * 16), comp);
-        _mm_storeu_si128((__m128i *)(comp_pred + 8 + j * 16), comp1);
+          _mm_storeu_si128((__m128i *)(comp_pred + j * 16), comp);
+          _mm_storeu_si128((__m128i *)(comp_pred + 8 + j * 16), comp1);
+        }
+        comp_pred += 32;
       }
       src0 += stride0;
       src1 += stride1;
       mask += mask_stride;
-      comp_pred += width;
       i += 1;
     } while (i < height);
+  }
+}
+
+uint64_t aom_mse_4xh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int h) {
+  uint64_t sum = 0;
+  __m128i dst0_8x8, dst1_8x8, dst_16x8;
+  __m128i src0_16x4, src1_16x4, src_16x8;
+  __m128i res0_32x4, res1_32x4, res0_64x4, res1_64x4, res2_64x4, res3_64x4;
+  __m128i sub_result_16x8;
+  const __m128i zeros = _mm_setzero_si128();
+  __m128i square_result = _mm_setzero_si128();
+  for (int i = 0; i < h; i += 2) {
+    dst0_8x8 = _mm_cvtsi32_si128(*(uint32_t const *)(&dst[(i + 0) * dstride]));
+    dst1_8x8 = _mm_cvtsi32_si128(*(uint32_t const *)(&dst[(i + 1) * dstride]));
+    dst_16x8 = _mm_unpacklo_epi8(_mm_unpacklo_epi32(dst0_8x8, dst1_8x8), zeros);
+
+    src0_16x4 = _mm_loadl_epi64((__m128i const *)(&src[(i + 0) * sstride]));
+    src1_16x4 = _mm_loadl_epi64((__m128i const *)(&src[(i + 1) * sstride]));
+    src_16x8 = _mm_unpacklo_epi64(src0_16x4, src1_16x4);
+
+    sub_result_16x8 = _mm_sub_epi16(src_16x8, dst_16x8);
+
+    res0_32x4 = _mm_unpacklo_epi16(sub_result_16x8, zeros);
+    res1_32x4 = _mm_unpackhi_epi16(sub_result_16x8, zeros);
+
+    res0_32x4 = _mm_madd_epi16(res0_32x4, res0_32x4);
+    res1_32x4 = _mm_madd_epi16(res1_32x4, res1_32x4);
+
+    res0_64x4 = _mm_unpacklo_epi32(res0_32x4, zeros);
+    res1_64x4 = _mm_unpackhi_epi32(res0_32x4, zeros);
+    res2_64x4 = _mm_unpacklo_epi32(res1_32x4, zeros);
+    res3_64x4 = _mm_unpackhi_epi32(res1_32x4, zeros);
+
+    square_result = _mm_add_epi64(
+        square_result,
+        _mm_add_epi64(
+            _mm_add_epi64(_mm_add_epi64(res0_64x4, res1_64x4), res2_64x4),
+            res3_64x4));
+  }
+  const __m128i sum_1x64 =
+      _mm_add_epi64(square_result, _mm_srli_si128(square_result, 8));
+  xx_storel_64(&sum, sum_1x64);
+  return sum;
+}
+
+uint64_t aom_mse_8xh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int h) {
+  uint64_t sum = 0;
+  __m128i dst_8x8, dst_16x8;
+  __m128i src_16x8;
+  __m128i res0_32x4, res1_32x4, res0_64x4, res1_64x4, res2_64x4, res3_64x4;
+  __m128i sub_result_16x8;
+  const __m128i zeros = _mm_setzero_si128();
+  __m128i square_result = _mm_setzero_si128();
+
+  for (int i = 0; i < h; i++) {
+    dst_8x8 = _mm_loadl_epi64((__m128i const *)(&dst[(i + 0) * dstride]));
+    dst_16x8 = _mm_unpacklo_epi8(dst_8x8, zeros);
+
+    src_16x8 = _mm_loadu_si128((__m128i *)&src[i * sstride]);
+
+    sub_result_16x8 = _mm_sub_epi16(src_16x8, dst_16x8);
+
+    res0_32x4 = _mm_unpacklo_epi16(sub_result_16x8, zeros);
+    res1_32x4 = _mm_unpackhi_epi16(sub_result_16x8, zeros);
+
+    res0_32x4 = _mm_madd_epi16(res0_32x4, res0_32x4);
+    res1_32x4 = _mm_madd_epi16(res1_32x4, res1_32x4);
+
+    res0_64x4 = _mm_unpacklo_epi32(res0_32x4, zeros);
+    res1_64x4 = _mm_unpackhi_epi32(res0_32x4, zeros);
+    res2_64x4 = _mm_unpacklo_epi32(res1_32x4, zeros);
+    res3_64x4 = _mm_unpackhi_epi32(res1_32x4, zeros);
+
+    square_result = _mm_add_epi64(
+        square_result,
+        _mm_add_epi64(
+            _mm_add_epi64(_mm_add_epi64(res0_64x4, res1_64x4), res2_64x4),
+            res3_64x4));
+  }
+  const __m128i sum_1x64 =
+      _mm_add_epi64(square_result, _mm_srli_si128(square_result, 8));
+  xx_storel_64(&sum, sum_1x64);
+  return sum;
+}
+
+uint64_t aom_mse_wxh_16bit_sse2(uint8_t *dst, int dstride, uint16_t *src,
+                                int sstride, int w, int h) {
+  assert((w == 8 || w == 4) && (h == 8 || h == 4) &&
+         "w=8/4 and h=8/4 must satisfy");
+  switch (w) {
+    case 4: return aom_mse_4xh_16bit_sse2(dst, dstride, src, sstride, h);
+    case 8: return aom_mse_8xh_16bit_sse2(dst, dstride, src, sstride, h);
+    default: assert(0 && "unsupported width"); return -1;
   }
 }

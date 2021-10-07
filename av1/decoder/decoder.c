@@ -138,7 +138,9 @@ AV1Decoder *av1_decoder_create(BufferPool *const pool) {
   av1_loop_filter_init(cm);
 
   av1_qm_init(&cm->quant_params, av1_num_planes(cm));
+#if !CONFIG_REALTIME_ONLY
   av1_loop_restoration_precal();
+#endif
 #if CONFIG_ACCOUNTING
   pbi->acct_enabled = 1;
   aom_accounting_init(&pbi->accounting);
@@ -185,13 +187,14 @@ void av1_decoder_remove(AV1Decoder *pbi) {
   aom_free(pbi->lf_worker.data1);
 
   if (pbi->thread_data) {
-    for (int worker_idx = 0; worker_idx < pbi->max_threads - 1; worker_idx++) {
+    for (int worker_idx = 1; worker_idx < pbi->max_threads; worker_idx++) {
       DecWorkerData *const thread_data = pbi->thread_data + worker_idx;
       av1_free_mc_tmp_buf(thread_data->td);
       aom_free(thread_data->td);
     }
     aom_free(pbi->thread_data);
   }
+  aom_free(pbi->dcb.xd.seg_mask);
 
   for (i = 0; i < pbi->num_workers; ++i) {
     AVxWorker *const worker = &pbi->tile_workers[i];
@@ -216,7 +219,9 @@ void av1_decoder_remove(AV1Decoder *pbi) {
 
   if (pbi->num_workers > 0) {
     av1_loop_filter_dealloc(&pbi->lf_row_sync);
+#if !CONFIG_REALTIME_ONLY
     av1_loop_restoration_dealloc(&pbi->lr_row_sync, pbi->num_workers);
+#endif
     av1_dealloc_dec_jobs(&pbi->tile_mt_info);
   }
 
