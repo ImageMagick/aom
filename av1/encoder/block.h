@@ -23,7 +23,7 @@
 
 #include "av1/encoder/enc_enums.h"
 #if !CONFIG_REALTIME_ONLY
-#include "av1/encoder/partition_cnn_weights.h"
+#include "av1/encoder/partition_cnn.h"
 #endif
 
 #include "av1/encoder/hash.h"
