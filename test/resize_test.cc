@@ -203,6 +203,17 @@ class ResizeTest
 
   virtual void SetUp() { InitializeConfig(GET_PARAM(1)); }
 
+  virtual void PreEncodeFrameHook(libaom_test::VideoSource *video,
+                                  libaom_test::Encoder *encoder) {
+    if (video->frame() == 0) {
+      if (GET_PARAM(1) == ::libaom_test::kRealTime) {
+        encoder->Control(AV1E_SET_AQ_MODE, 3);
+        encoder->Control(AOME_SET_CPUUSED, 5);
+        encoder->Control(AV1E_SET_FRAME_PARALLEL_DECODING, 1);
+      }
+    }
+  }
+
   virtual void DecompressedFrameHook(const aom_image_t &img,
                                      aom_codec_pts_t pts) {
     frame_info_list_.push_back(FrameInfo(pts, img.d_w, img.d_h));
@@ -238,6 +249,7 @@ TEST_P(ResizeTest, TestExternalResizeWorks) {
   }
 }
 
+#if !CONFIG_REALTIME_ONLY
 const unsigned int kStepDownFrame = 3;
 const unsigned int kStepUpFrame = 6;
 
@@ -245,7 +257,7 @@ class ResizeInternalTestLarge : public ResizeTest {
  protected:
 #if WRITE_COMPRESSED_STREAM
   ResizeInternalTestLarge()
-      : ResizeTest(), frame0_psnr_(0.0), outfile_(NULL), out_frames_(0) {}
+      : ResizeTest(), frame0_psnr_(0.0), outfile_(nullptr), out_frames_(0) {}
 #else
   ResizeInternalTestLarge() : ResizeTest(), frame0_psnr_(0.0) {}
 #endif
@@ -264,7 +276,7 @@ class ResizeInternalTestLarge : public ResizeTest {
       if (!fseek(outfile_, 0, SEEK_SET))
         write_ivf_file_header(&cfg_, out_frames_, outfile_);
       fclose(outfile_);
-      outfile_ = NULL;
+      outfile_ = nullptr;
     }
 #endif
   }
@@ -276,8 +288,7 @@ class ResizeInternalTestLarge : public ResizeTest {
       if (video->frame() == 0) {
         struct aom_scaling_mode mode = { AOME_ONETWO, AOME_ONETWO };
         encoder->Control(AOME_SET_SCALEMODE, &mode);
-      }
-      if (video->frame() == 1) {
+      } else if (video->frame() == 1) {
         struct aom_scaling_mode mode = { AOME_NORMAL, AOME_NORMAL };
         encoder->Control(AOME_SET_SCALEMODE, &mode);
         cfg_.rc_min_quantizer = cfg_.rc_max_quantizer = new_q;
@@ -362,6 +373,10 @@ TEST_P(ResizeInternalTestLarge, TestInternalResizeChangeConfig) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
+AV1_INSTANTIATE_TEST_SUITE(ResizeInternalTestLarge,
+                           ::testing::Values(::libaom_test::kOnePassGood));
+#endif
+
 class ResizeRealtimeTest
     : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
       public ::libaom_test::EncoderTest {
@@ -375,6 +390,9 @@ class ResizeRealtimeTest
                                   libaom_test::Encoder *encoder) {
     if (video->frame() == 0) {
       encoder->Control(AV1E_SET_AQ_MODE, 3);
+      encoder->Control(AV1E_SET_ALLOW_WARPED_MOTION, 0);
+      encoder->Control(AV1E_SET_ENABLE_GLOBAL_MOTION, 0);
+      encoder->Control(AV1E_SET_ENABLE_OBMC, 0);
       encoder->Control(AOME_SET_CPUUSED, set_cpu_used_);
       encoder->Control(AV1E_SET_FRAME_PARALLEL_DECODING, 1);
     }
@@ -706,7 +724,7 @@ class ResizeCspTest : public ResizeTest {
  protected:
 #if WRITE_COMPRESSED_STREAM
   ResizeCspTest()
-      : ResizeTest(), frame0_psnr_(0.0), outfile_(NULL), out_frames_(0) {}
+      : ResizeTest(), frame0_psnr_(0.0), outfile_(nullptr), out_frames_(0) {}
 #else
   ResizeCspTest() : ResizeTest(), frame0_psnr_(0.0) {}
 #endif
@@ -725,7 +743,7 @@ class ResizeCspTest : public ResizeTest {
       if (!fseek(outfile_, 0, SEEK_SET))
         write_ivf_file_header(&cfg_, out_frames_, outfile_);
       fclose(outfile_);
-      outfile_ = NULL;
+      outfile_ = nullptr;
     }
 #endif
   }
@@ -786,6 +804,7 @@ TEST_P(ResizeCspTest, TestResizeCspWorks) {
   }
 }
 
+#if !CONFIG_REALTIME_ONLY
 // This class is used to check if there are any fatal
 // failures while encoding with resize-mode > 0
 class ResizeModeTestLarge
@@ -833,22 +852,130 @@ TEST_P(ResizeModeTestLarge, ResizeModeTest) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(ResizeModeTestLarge);
+AV1_INSTANTIATE_TEST_SUITE(ResizeModeTestLarge,
+                           ::testing::Values(::libaom_test::kOnePassGood,
+                                             ::libaom_test::kTwoPassGood),
+                           ::testing::Values(1, 2), ::testing::Values(8, 12),
+                           ::testing::Values(10, 14), ::testing::Values(3, 6));
+#endif  // !CONFIG_REALTIME_ONLY
+
 AV1_INSTANTIATE_TEST_SUITE(ResizeTest,
                            ::testing::Values(::libaom_test::kRealTime));
-AV1_INSTANTIATE_TEST_SUITE(ResizeInternalTestLarge,
-                           ::testing::Values(::libaom_test::kOnePassGood));
 AV1_INSTANTIATE_TEST_SUITE(ResizeRealtimeTest,
                            ::testing::Values(::libaom_test::kRealTime),
-                           ::testing::Range(5, 10));
+                           ::testing::Range(6, 10));
 AV1_INSTANTIATE_TEST_SUITE(ResizeCspTest,
                            ::testing::Values(::libaom_test::kRealTime));
 
-// TODO(anyone): Enable below test once resize issues are fixed
-GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(ResizeModeTestLarge);
-// AV1_INSTANTIATE_TEST_SUITE(
-//    ResizeModeTestLarge,
-//    ::testing::Values(::libaom_test::kOnePassGood,
-//    ::libaom_test::kTwoPassGood),
-//    ::testing::Values(1, 2), ::testing::Values(8, 12, 16),
-//    ::testing::Values(8, 12, 16), ::testing::Range(2, 7));
+// A test that reproduces crbug.com/1393384. In realtime usage mode, encode
+// frames of sizes 202x202, 1x202, and 202x202. ASan should report no memory
+// errors.
+TEST(ResizeSimpleTest, TemporarySmallerFrameSize) {
+  constexpr int kWidth = 202;
+  constexpr int kHeight = 202;
+  // Dummy buffer of zero samples.
+  constexpr size_t kBufferSize =
+      kWidth * kHeight + 2 * (kWidth + 1) / 2 * (kHeight + 1) / 2;
+  std::vector<unsigned char> buffer(kBufferSize);
+
+  aom_image_t img;
+  EXPECT_EQ(&img, aom_img_wrap(&img, AOM_IMG_FMT_I420, kWidth, kHeight, 1,
+                               buffer.data()));
+  aom_image_t img2;
+  EXPECT_EQ(&img2, aom_img_wrap(&img2, AOM_IMG_FMT_I420, 1, kHeight, 1,
+                                buffer.data()));
+
+  aom_codec_iface_t *iface = aom_codec_av1_cx();
+  aom_codec_enc_cfg_t cfg;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_enc_config_default(iface, &cfg, AOM_USAGE_REALTIME));
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  aom_codec_ctx_t enc;
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_init(&enc, iface, &cfg, 0));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_control(&enc, AOME_SET_CPUUSED, 5));
+
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img, 0, 1, 0));
+
+  cfg.g_w = 1;
+  cfg.g_h = kHeight;
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_config_set(&enc, &cfg));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img2, 1, 1, 0));
+
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_config_set(&enc, &cfg));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img, 2, 1, 0));
+
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, nullptr, 0, 0, 0));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_destroy(&enc));
+}
+
+// A test that reproduces crbug.com/1410766. In realtime usage mode
+// for SVC with temporal layers, encode frames of sizes 600x600,
+// 600x600, and 100x480. ASan should report no memory errors.
+TEST(ResizeSimpleTest, SmallerFrameSizeSVC) {
+  constexpr int kWidth = 600;
+  constexpr int kHeight = 600;
+  // Dummy buffer of zero samples.
+  constexpr size_t kBufferSize =
+      kWidth * kHeight + 2 * (kWidth + 1) / 2 * (kHeight + 1) / 2;
+  std::vector<unsigned char> buffer(kBufferSize);
+
+  aom_image_t img;
+  EXPECT_EQ(&img, aom_img_wrap(&img, AOM_IMG_FMT_I420, kWidth, kHeight, 1,
+                               buffer.data()));
+  aom_image_t img2;
+  EXPECT_EQ(&img2,
+            aom_img_wrap(&img2, AOM_IMG_FMT_I420, 100, 480, 1, buffer.data()));
+
+  aom_codec_iface_t *iface = aom_codec_av1_cx();
+  aom_codec_enc_cfg_t cfg;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_enc_config_default(iface, &cfg, AOM_USAGE_REALTIME));
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  aom_codec_ctx_t enc;
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_init(&enc, iface, &cfg, 0));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_control(&enc, AOME_SET_CPUUSED, 5));
+
+  aom_svc_params_t svc_params = {};
+  aom_svc_layer_id_t layer_id;
+  svc_params.number_spatial_layers = 1;
+  svc_params.framerate_factor[0] = 2;
+  svc_params.framerate_factor[1] = 1;
+  svc_params.number_temporal_layers = 2;
+  // Bitrate allocation L0: 60% L1: 40%
+  svc_params.layer_target_bitrate[0] = 60 * cfg.rc_target_bitrate / 100;
+  svc_params.layer_target_bitrate[1] = cfg.rc_target_bitrate;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_control(&enc, AV1E_SET_SVC_PARAMS, &svc_params));
+
+  layer_id.spatial_layer_id = 0;
+  layer_id.temporal_layer_id = 0;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_control(&enc, AV1E_SET_SVC_LAYER_ID, &layer_id));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img, 0, 1, 0));
+
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  layer_id.temporal_layer_id = 1;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_control(&enc, AV1E_SET_SVC_LAYER_ID, &layer_id));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_config_set(&enc, &cfg));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img, 1, 1, 0));
+
+  cfg.g_w = 100;
+  cfg.g_h = 480;
+  layer_id.temporal_layer_id = 0;
+  EXPECT_EQ(AOM_CODEC_OK,
+            aom_codec_control(&enc, AV1E_SET_SVC_LAYER_ID, &layer_id));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_enc_config_set(&enc, &cfg));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, &img2, 2, 1, 0));
+
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_encode(&enc, nullptr, 0, 0, 0));
+  EXPECT_EQ(AOM_CODEC_OK, aom_codec_destroy(&enc));
+}
+
 }  // namespace

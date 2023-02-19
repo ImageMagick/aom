@@ -26,7 +26,6 @@
 #include "av1/common/scan.h"
 #include "av1/common/txb_common.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 
@@ -48,16 +47,15 @@ class EncodeTxbTest : public ::testing::TestWithParam<GetNzMapContextsFunc> {
   virtual void SetUp() {
     coeff_contexts_ref_ = reinterpret_cast<int8_t *>(
         aom_memalign(16, sizeof(*coeff_contexts_ref_) * MAX_TX_SQUARE));
-    ASSERT_TRUE(coeff_contexts_ref_ != NULL);
+    ASSERT_NE(coeff_contexts_ref_, nullptr);
     coeff_contexts_ = reinterpret_cast<int8_t *>(
         aom_memalign(16, sizeof(*coeff_contexts_) * MAX_TX_SQUARE));
-    ASSERT_TRUE(coeff_contexts_ != NULL);
+    ASSERT_NE(coeff_contexts_, nullptr);
   }
 
   virtual void TearDown() {
     aom_free(coeff_contexts_ref_);
     aom_free(coeff_contexts_);
-    libaom_test::ClearSystemState();
   }
 
   void GetNzMapContextsRun() {
@@ -214,7 +212,7 @@ class EncodeTxbInitLevelTest
     : public ::testing::TestWithParam<TxbInitLevelParam> {
  public:
   virtual ~EncodeTxbInitLevelTest() {}
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  virtual void TearDown() {}
   void RunTest(av1_txb_init_levels_func test_func, int tx_size, int is_speed);
 };
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(EncodeTxbInitLevelTest);
@@ -231,7 +229,7 @@ void EncodeTxbInitLevelTest::RunTest(av1_txb_init_levels_func test_func,
 
   ACMRandom rnd(ACMRandom::DeterministicSeed());
   for (int i = 0; i < width * height; i++) {
-    coeff[i] = rnd.Rand15Signed() + rnd.Rand15Signed();
+    coeff[i] = rnd.Rand16Signed();
   }
   for (int i = 0; i < TX_PAD_2D; i++) {
     levels_buf[0][i] = rnd.Rand8();

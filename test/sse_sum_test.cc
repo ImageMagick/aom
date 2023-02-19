@@ -21,7 +21,6 @@
 
 #include "aom_ports/mem.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 #include "test/function_equivalence_test.h"
@@ -47,13 +46,10 @@ class SumSSETest : public ::testing::TestWithParam<TestFuncs> {
     params_ = this->GetParam();
     rnd_.Reset(ACMRandom::DeterministicSeed());
     src_ = reinterpret_cast<int16_t *>(aom_memalign(16, 256 * 256 * 2));
-    ASSERT_TRUE(src_ != NULL);
+    ASSERT_NE(src_, nullptr);
   }
 
-  virtual void TearDown() {
-    libaom_test::ClearSystemState();
-    aom_free(src_);
-  }
+  virtual void TearDown() { aom_free(src_); }
   void RunTest(int isRandom);
   void RunSpeedTest();
 
@@ -164,6 +160,13 @@ INSTANTIATE_TEST_SUITE_P(SSE2, SumSSETest,
                              &aom_sum_sse_2d_i16_c, &aom_sum_sse_2d_i16_sse2)));
 
 #endif  // HAVE_SSE2
+
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(NEON, SumSSETest,
+                         ::testing::Values(TestFuncs(
+                             &aom_sum_sse_2d_i16_c, &aom_sum_sse_2d_i16_neon)));
+#endif  // HAVE_NEON
+
 #if HAVE_AVX2
 INSTANTIATE_TEST_SUITE_P(AVX2, SumSSETest,
                          ::testing::Values(TestFuncs(

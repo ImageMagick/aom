@@ -20,7 +20,6 @@
 #include "av1/common/convolve.h"
 #include "av1/common/resize.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 
@@ -48,7 +47,7 @@ class TestImage {
     assert(0 <= x0_ && x0_ <= RS_SCALE_SUBPEL_MASK);
 
     w_dst_ = w_src_;
-    av1_calculate_unscaled_superres_size(&w_dst_, NULL, superres_denom);
+    av1_calculate_unscaled_superres_size(&w_dst_, nullptr, superres_denom);
 
     src_stride_ = ALIGN_POWER_OF_TWO(w_src_ + 2 * kHPad, 4);
     dst_stride_ = ALIGN_POWER_OF_TWO(w_dst_ + 2 * kHPad, 4);
@@ -162,9 +161,9 @@ void TestImage<Pixel>::Check() const {
 template <typename Pixel>
 class ConvolveHorizRSTestBase : public ::testing::Test {
  public:
-  ConvolveHorizRSTestBase() : image_(NULL) {}
+  ConvolveHorizRSTestBase() : image_(nullptr) {}
   virtual ~ConvolveHorizRSTestBase() {}
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  virtual void TearDown() {}
 
   // Implemented by subclasses (SetUp depends on the parameters passed
   // in and RunOne depends on the function to be tested. These can't
@@ -194,6 +193,7 @@ class ConvolveHorizRSTestBase : public ::testing::Test {
 
         image_ =
             new TestImage<Pixel>(width_src, height, superres_denom, x0, bd_);
+        ASSERT_NE(image_, nullptr);
 
         Prep(&rnd);
         RunOne(true);
@@ -213,6 +213,7 @@ class ConvolveHorizRSTestBase : public ::testing::Test {
     int x0 = RS_SCALE_SUBPEL_MASK >> 1;
 
     image_ = new TestImage<Pixel>(width_src, height, superres_denom, x0, bd_);
+    ASSERT_NE(image_, nullptr);
 
     ACMRandom rnd(ACMRandom::DeterministicSeed());
     Prep(&rnd);

@@ -31,7 +31,11 @@ class CompressedSource {
     aom_codec_iface_t *algo = aom_codec_av1_cx();
 
     aom_codec_enc_cfg_t cfg;
+#if CONFIG_REALTIME_ONLY
+    aom_codec_enc_config_default(algo, &cfg, 1);
+#else
     aom_codec_enc_config_default(algo, &cfg, 0);
+#endif
 
     // force the quantizer, to reduce the sensitivity on encoding choices.
     // e.g, we don't want this test to break when the rate control is modified.
@@ -94,9 +98,9 @@ class CompressedSource {
     aom_img_wrap(&img, format_, width_, height_, 0, buf);
     aom_codec_encode(&enc_, &img, frame_count_++, 1, 0);
 
-    aom_codec_iter_t iter = NULL;
+    aom_codec_iter_t iter = nullptr;
 
-    const aom_codec_cx_pkt_t *pkt = NULL;
+    const aom_codec_cx_pkt_t *pkt = nullptr;
 
     do {
       pkt = aom_codec_get_cx_data(&enc_, &iter);
@@ -153,9 +157,9 @@ class Decoder {
 
   std::vector<int16_t> decode(const aom_codec_cx_pkt_t *pkt) {
     aom_codec_decode(&dec_, static_cast<uint8_t *>(pkt->data.frame.buf),
-                     pkt->data.frame.sz, NULL);
+                     pkt->data.frame.sz, nullptr);
 
-    aom_codec_iter_t iter = NULL;
+    aom_codec_iter_t iter = nullptr;
     return Serialize(aom_codec_get_frame(&dec_, &iter));
   }
 

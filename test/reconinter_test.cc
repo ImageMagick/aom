@@ -21,7 +21,6 @@
 #include "av1/common/scan.h"
 #include "av1/common/txb_common.h"
 #include "test/acm_random.h"
-#include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
@@ -51,7 +50,7 @@ class BuildCompDiffwtdMaskTest
  public:
   virtual ~BuildCompDiffwtdMaskTest() {}
 
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  virtual void TearDown() {}
   void RunTest(buildcompdiffwtdmaskd_func test_impl, const int is_speed,
                const DIFFWTD_MASK_TYPE type);
 
@@ -79,7 +78,7 @@ class BuildCompDiffwtdMaskD16Test
     : public ::testing::TestWithParam<BuildCompDiffwtdMaskD16Param> {
  public:
   ~BuildCompDiffwtdMaskD16Test() {}
-  virtual void TearDown() { libaom_test::ClearSystemState(); }
+  virtual void TearDown() {}
   void SetUp() { rnd_.Reset(ACMRandom::DeterministicSeed()); }
 
  protected:
@@ -101,7 +100,8 @@ void BuildCompDiffwtdMaskD16Test::RunCheckOutput(
   DECLARE_ALIGNED(32, uint16_t, src0[MAX_SB_SQUARE]);
   DECLARE_ALIGNED(32, uint16_t, src1[MAX_SB_SQUARE]);
 
-  ConvolveParams conv_params = get_conv_params_no_round(0, 0, NULL, 0, 1, bd);
+  ConvolveParams conv_params =
+      get_conv_params_no_round(0, 0, nullptr, 0, 1, bd);
 
   int in_precision =
       bd + 2 * FILTER_BITS - conv_params.round_0 - conv_params.round_1 + 2;
@@ -141,7 +141,8 @@ void BuildCompDiffwtdMaskD16Test::RunSpeedTest(
   DECLARE_ALIGNED(32, uint16_t, src0[MAX_SB_SQUARE]);
   DECLARE_ALIGNED(32, uint16_t, src1[MAX_SB_SQUARE]);
 
-  ConvolveParams conv_params = get_conv_params_no_round(0, 0, NULL, 0, 1, bd);
+  ConvolveParams conv_params =
+      get_conv_params_no_round(0, 0, nullptr, 0, 1, bd);
 
   int in_precision =
       bd + 2 * FILTER_BITS - conv_params.round_0 - conv_params.round_1 + 2;

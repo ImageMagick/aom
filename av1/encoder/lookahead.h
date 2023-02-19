@@ -25,8 +25,8 @@ extern "C" {
 #endif
 
 /*!\cond */
-#define MAX_LAG_BUFFERS 35
-#define MAX_LAP_BUFFERS 35
+#define MAX_LAG_BUFFERS 48
+#define MAX_LAP_BUFFERS 48
 #define MAX_TOTAL_BUFFERS (MAX_LAG_BUFFERS + MAX_LAP_BUFFERS)
 #define LAP_LAG_IN_FRAMES 17
 
@@ -75,6 +75,10 @@ struct lookahead_ctx *av1_lookahead_init(
 /**\brief Destroys the lookahead stage
  */
 void av1_lookahead_destroy(struct lookahead_ctx *ctx);
+
+/**\brief Check if lookahead buffer is full
+ */
+int av1_lookahead_full(const struct lookahead_ctx *ctx);
 
 /**\brief Enqueue a source buffer
  *

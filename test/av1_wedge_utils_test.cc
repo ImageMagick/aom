@@ -182,7 +182,7 @@ TEST_P(WedgeUtilsSSEOptTest, RandomValues) {
 
     const uint64_t ref_res = params_.ref_func(r1, d, m, N);
     uint64_t tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -212,7 +212,7 @@ TEST_P(WedgeUtilsSSEOptTest, ExtremeValues) {
 
     const uint64_t ref_res = params_.ref_func(r1, d, m, N);
     uint64_t tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(r1, d, m, N));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -259,7 +259,7 @@ TEST_P(WedgeUtilsSignOptTest, RandomValues) {
 
     const int ref_res = params_.ref_func(ds, m, N, limit);
     int tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -314,7 +314,7 @@ TEST_P(WedgeUtilsSignOptTest, ExtremeValues) {
 
     const int ref_res = params_.ref_func(ds, m, N, limit);
     int tst_res;
-    ASM_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
+    API_REGISTER_STATE_CHECK(tst_res = params_.tst_func(ds, m, N, limit));
 
     ASSERT_EQ(ref_res, tst_res);
   }
@@ -341,7 +341,7 @@ TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
 
   for (int iter = 0; iter < kIterations && !HasFatalFailure(); ++iter) {
     for (int i = 0; i < MAX_SB_SQUARE; ++i) {
-      a[i] = rng_.Rand16();
+      a[i] = rng_.Rand16Signed();
       b[i] = rng_(2 * INT16_MAX + 1) - INT16_MAX;
     }
 
@@ -351,7 +351,7 @@ TEST_P(WedgeUtilsDeltaSquaresOptTest, RandomValues) {
     memset(&d_tst, INT16_MAX, sizeof(d_tst));
 
     params_.ref_func(d_ref, a, b, N);
-    ASM_REGISTER_STATE_CHECK(params_.tst_func(d_tst, a, b, N));
+    API_REGISTER_STATE_CHECK(params_.tst_func(d_tst, a, b, N));
 
     for (int i = 0; i < MAX_SB_SQUARE; ++i) ASSERT_EQ(d_ref[i], d_tst[i]);
   }
@@ -373,6 +373,13 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(TestFuncsFDS(av1_wedge_compute_delta_squares_c,
                                    av1_wedge_compute_delta_squares_sse2)));
 #endif  // HAVE_SSE2
+
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(
+    NEON, WedgeUtilsSSEOptTest,
+    ::testing::Values(TestFuncsFSSE(av1_wedge_sse_from_residuals_c,
+                                    av1_wedge_sse_from_residuals_neon)));
+#endif  // HAVE_NEON
 
 #if HAVE_AVX2
 INSTANTIATE_TEST_SUITE_P(

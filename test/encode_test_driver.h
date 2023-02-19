@@ -45,7 +45,7 @@ enum TestMode { kRealTime, kOnePassGood, kTwoPassGood, kAllIntra };
 class CxDataIterator {
  public:
   explicit CxDataIterator(aom_codec_ctx_t *encoder)
-      : encoder_(encoder), iter_(NULL) {}
+      : encoder_(encoder), iter_(nullptr) {}
 
   const aom_codec_cx_pkt_t *Next() {
     return aom_codec_get_cx_data(encoder_, &iter_);
@@ -99,7 +99,7 @@ class Encoder {
   }
   // This is a thin wrapper around aom_codec_encode(), so refer to
   // aom_encoder.h for its semantics.
-  void EncodeFrame(VideoSource *video, const unsigned long frame_flags);
+  void EncodeFrame(VideoSource *video, aom_enc_frame_flags_t frame_flags);
 
   // Convenience wrapper for EncodeFrame()
   void EncodeFrame(VideoSource *video) { EncodeFrame(video, 0); }
@@ -129,7 +129,17 @@ class Encoder {
     ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
   }
 
+  void Control(int ctrl_id, struct aom_svc_ref_frame_comp_pred *arg) {
+    const aom_codec_err_t res = aom_codec_control(&encoder_, ctrl_id, arg);
+    ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
+  }
+
   void Control(int ctrl_id, struct aom_svc_params *arg) {
+    const aom_codec_err_t res = aom_codec_control(&encoder_, ctrl_id, arg);
+    ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
+  }
+
+  void Control(int ctrl_id, struct aom_ext_part_funcs *arg) {
     const aom_codec_err_t res = aom_codec_control(&encoder_, ctrl_id, arg);
     ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
   }
@@ -140,6 +150,11 @@ class Encoder {
     ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
   }
 #endif
+
+  void SetOption(const char *name, const char *value) {
+    const aom_codec_err_t res = aom_codec_set_option(&encoder_, name, value);
+    ASSERT_EQ(AOM_CODEC_OK, res) << EncoderError();
+  }
 
   void Config(const aom_codec_enc_cfg_t *cfg) {
     const aom_codec_err_t res = aom_codec_enc_config_set(&encoder_, cfg);
@@ -157,7 +172,7 @@ class Encoder {
 
   // Encode an image
   void EncodeFrameInternal(const VideoSource &video,
-                           const unsigned long frame_flags);
+                           aom_enc_frame_flags_t frame_flags);
 
   // Flush the encoder on EOS
   void Flush();
@@ -179,7 +194,7 @@ class EncoderTest {
  protected:
   explicit EncoderTest(const CodecFactory *codec)
       : codec_(codec), abort_(false), init_flags_(0), frame_flags_(0),
-        last_pts_(0), mode_(kRealTime), number_spatial_layers_(1) {
+        mode_(kRealTime) {
     // Default to 1 thread.
     cfg_.g_threads = 1;
   }
@@ -203,9 +218,10 @@ class EncoderTest {
   virtual void EndPassHook() {}
 
   // Hook to be called before encoding a frame.
-  virtual void PreEncodeFrameHook(VideoSource * /*video*/) {}
   virtual void PreEncodeFrameHook(VideoSource * /*video*/,
                                   Encoder * /*encoder*/) {}
+
+  virtual void PostEncodeFrameHook(Encoder * /*encoder*/) {}
 
   // Hook to be called on every compressed data packet.
   virtual void FramePktHook(const aom_codec_cx_pkt_t * /*pkt*/) {}
@@ -215,6 +231,12 @@ class EncoderTest {
 
   // Hook to be called on every first pass stats packet.
   virtual void StatsPktHook(const aom_codec_cx_pkt_t * /*pkt*/) {}
+
+  // Calculates SSIM at frame level.
+  virtual void CalculateFrameLevelSSIM(const aom_image_t * /*img_src*/,
+                                       const aom_image_t * /*img_enc*/,
+                                       aom_bit_depth_t /*bit_depth*/,
+                                       unsigned int /*input_bit_depth*/) {}
 
   // Hook to determine whether the encode loop should continue.
   virtual bool Continue() const {
@@ -255,10 +277,8 @@ class EncoderTest {
   unsigned int passes_;
   TwopassStatsStore stats_;
   aom_codec_flags_t init_flags_;
-  unsigned long frame_flags_;
-  aom_codec_pts_t last_pts_;
+  aom_enc_frame_flags_t frame_flags_;
   TestMode mode_;
-  int number_spatial_layers_;
 };
 
 }  // namespace libaom_test

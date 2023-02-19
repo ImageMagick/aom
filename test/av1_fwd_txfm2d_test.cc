@@ -55,12 +55,16 @@ class AV1FwdTxfm2d : public ::testing::TestWithParam<AV1FwdTxfm2dParam> {
     txfm2d_size_ = tx_width_ * tx_height_;
     input_ = reinterpret_cast<int16_t *>(
         aom_memalign(16, sizeof(input_[0]) * txfm2d_size_));
+    ASSERT_NE(input_, nullptr);
     output_ = reinterpret_cast<int32_t *>(
         aom_memalign(16, sizeof(output_[0]) * txfm2d_size_));
+    ASSERT_NE(output_, nullptr);
     ref_input_ = reinterpret_cast<double *>(
         aom_memalign(16, sizeof(ref_input_[0]) * txfm2d_size_));
+    ASSERT_NE(ref_input_, nullptr);
     ref_output_ = reinterpret_cast<double *>(
         aom_memalign(16, sizeof(ref_output_[0]) * txfm2d_size_));
+    ASSERT_NE(ref_output_, nullptr);
   }
 
   void RunFwdAccuracyCheck() {
@@ -248,7 +252,7 @@ void AV1FwdTxfm2dMatchTest(TX_SIZE tx_size, lowbd_fwd_txfm_func target_func) {
     }
 
     FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
-    if (ref_func != NULL) {
+    if (ref_func != nullptr) {
       DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
       DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
       DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
@@ -305,7 +309,7 @@ void AV1FwdTxfm2dSpeedTest(TX_SIZE tx_size, lowbd_fwd_txfm_func target_func) {
       }
 
       FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
-      if (ref_func != NULL) {
+      if (ref_func != nullptr) {
         DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
         DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
         DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
@@ -361,6 +365,78 @@ TEST_P(AV1FwdTxfm2dTest, match) {
 }
 TEST_P(AV1FwdTxfm2dTest, DISABLED_Speed) {
   AV1FwdTxfm2dSpeedTest(GET_PARAM(0), GET_PARAM(1));
+}
+TEST(AV1FwdTxfm2dTest, DCTScaleTest) {
+  BitDepthInfo bd_info;
+  bd_info.bit_depth = 8;
+  bd_info.use_highbitdepth_buf = 0;
+  DECLARE_ALIGNED(32, int16_t, src_diff[1024]);
+  DECLARE_ALIGNED(32, tran_low_t, coeff[1024]);
+
+  const TX_SIZE tx_size_list[4] = { TX_4X4, TX_8X8, TX_16X16, TX_32X32 };
+  const int stride_list[4] = { 4, 8, 16, 32 };
+  const int ref_scale_list[4] = { 64, 64, 64, 16 };
+
+  for (int i = 0; i < 4; i++) {
+    TX_SIZE tx_size = tx_size_list[i];
+    int stride = stride_list[i];
+    int array_size = stride * stride;
+
+    for (int i = 0; i < array_size; i++) {
+      src_diff[i] = 8;
+      coeff[i] = 0;
+    }
+
+    av1_quick_txfm(/*use_hadamard=*/0, tx_size, bd_info, src_diff, stride,
+                   coeff);
+
+    double input_sse = 0;
+    double output_sse = 0;
+    for (int i = 0; i < array_size; i++) {
+      input_sse += pow(src_diff[i], 2);
+      output_sse += pow(coeff[i], 2);
+    }
+
+    double scale = output_sse / input_sse;
+
+    EXPECT_NEAR(scale, ref_scale_list[i], 5);
+  }
+}
+TEST(AV1FwdTxfm2dTest, HadamardScaleTest) {
+  BitDepthInfo bd_info;
+  bd_info.bit_depth = 8;
+  bd_info.use_highbitdepth_buf = 0;
+  DECLARE_ALIGNED(32, int16_t, src_diff[1024]);
+  DECLARE_ALIGNED(32, tran_low_t, coeff[1024]);
+
+  const TX_SIZE tx_size_list[4] = { TX_4X4, TX_8X8, TX_16X16, TX_32X32 };
+  const int stride_list[4] = { 4, 8, 16, 32 };
+  const int ref_scale_list[4] = { 1, 64, 64, 16 };
+
+  for (int i = 0; i < 4; i++) {
+    TX_SIZE tx_size = tx_size_list[i];
+    int stride = stride_list[i];
+    int array_size = stride * stride;
+
+    for (int i = 0; i < array_size; i++) {
+      src_diff[i] = 8;
+      coeff[i] = 0;
+    }
+
+    av1_quick_txfm(/*use_hadamard=*/1, tx_size, bd_info, src_diff, stride,
+                   coeff);
+
+    double input_sse = 0;
+    double output_sse = 0;
+    for (int i = 0; i < array_size; i++) {
+      input_sse += pow(src_diff[i], 2);
+      output_sse += pow(coeff[i], 2);
+    }
+
+    double scale = output_sse / input_sse;
+
+    EXPECT_NEAR(scale, ref_scale_list[i], 5);
+  }
 }
 using ::testing::Combine;
 using ::testing::Values;
@@ -452,7 +528,7 @@ void AV1HighbdFwdTxfm2dMatchTest(TX_SIZE tx_size,
       }
 
       FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
-      if (ref_func != NULL) {
+      if (ref_func != nullptr) {
         DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
         DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
         DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
@@ -513,7 +589,7 @@ void AV1HighbdFwdTxfm2dSpeedTest(TX_SIZE tx_size,
       }
 
       FwdTxfm2dFunc ref_func = libaom_test::fwd_txfm_func_ls[tx_size];
-      if (ref_func != NULL) {
+      if (ref_func != nullptr) {
         DECLARE_ALIGNED(32, int16_t, input[64 * 64]) = { 0 };
         DECLARE_ALIGNED(32, int32_t, output[64 * 64]);
         DECLARE_ALIGNED(32, int32_t, ref_output[64 * 64]);
@@ -580,8 +656,10 @@ using ::testing::ValuesIn;
 #if HAVE_SSE4_1
 static TX_SIZE Highbd_fwd_txfm_for_sse4_1[] = {
   TX_4X4,  TX_8X8,  TX_16X16, TX_32X32, TX_64X64, TX_4X8,   TX_8X4,
-  TX_8X16, TX_16X8, TX_16X32, TX_32X16, TX_32X64, TX_64X32, TX_4X16,
-  TX_16X4, TX_8X32, TX_32X8,  TX_16X64, TX_64X16,
+  TX_8X16, TX_16X8, TX_16X32, TX_32X16, TX_32X64, TX_64X32,
+#if !CONFIG_REALTIME_ONLY
+  TX_4X16, TX_16X4, TX_8X32,  TX_32X8,  TX_16X64, TX_64X16,
+#endif
 };
 
 INSTANTIATE_TEST_SUITE_P(SSE4_1, AV1HighbdFwdTxfm2dTest,

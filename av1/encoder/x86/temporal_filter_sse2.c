@@ -42,7 +42,7 @@ static void get_squared_error(const uint8_t *frame1, const unsigned int stride,
   for (int i = 0; i < block_height; i++) {
     for (int j = 0; j < block_width; j += 16) {
       // Set zero to uninitialized memory to avoid uninitialized loads later
-      *(uint32_t *)(dst) = _mm_cvtsi128_si32(_mm_setzero_si128());
+      *(int *)(dst) = _mm_cvtsi128_si32(_mm_setzero_si128());
 
       __m128i vsrc1 = _mm_loadu_si128((__m128i *)(src1 + j));
       __m128i vsrc2 = _mm_loadu_si128((__m128i *)(src2 + j));
@@ -63,8 +63,7 @@ static void get_squared_error(const uint8_t *frame1, const unsigned int stride,
     }
 
     // Set zero to uninitialized memory to avoid uninitialized loads later
-    *(uint32_t *)(dst + block_width + 2) =
-        _mm_cvtsi128_si32(_mm_setzero_si128());
+    *(int *)(dst + block_width + 2) = _mm_cvtsi128_si32(_mm_setzero_si128());
 
     src1 += stride;
     src2 += stride2;
@@ -215,10 +214,16 @@ void av1_apply_temporal_filter_sse2(
                                    TF_SEARCH_ERROR_NORM_WEIGHT);
   const double weight_factor =
       (double)TF_WINDOW_BLOCK_BALANCE_WEIGHT * inv_factor;
-  // Decay factors for non-local mean approach.
-  // Smaller q -> smaller filtering weight.
+  // Adjust filtering based on q.
+  // Larger q -> stronger filtering -> larger weight.
+  // Smaller q -> weaker filtering -> smaller weight.
   double q_decay = pow((double)q_factor / TF_Q_DECAY_THRESHOLD, 2);
   q_decay = CLIP(q_decay, 1e-5, 1);
+  if (q_factor >= TF_QINDEX_CUTOFF) {
+    // Max q_factor is 255, therefore the upper bound of q_decay is 8.
+    // We do not need a clip here.
+    q_decay = 0.5 * pow((double)q_factor / 64, 2);
+  }
   // Smaller strength -> smaller filtering weight.
   double s_decay = pow((double)filter_strength / TF_STRENGTH_THRESHOLD, 2);
   s_decay = CLIP(s_decay, 1e-5, 1);
@@ -254,6 +259,7 @@ void av1_apply_temporal_filter_sse2(
     const double inv_num_ref_pixels = 1.0 / num_ref_pixels;
     // Larger noise -> larger filtering weight.
     const double n_decay = 0.5 + log(2 * noise_levels[plane] + 5.0);
+    // Decay factors for non-local mean approach.
     const double decay_factor = 1 / (n_decay * q_decay * s_decay);
 
     // Filter U-plane and V-plane using Y-plane. This is because motion
