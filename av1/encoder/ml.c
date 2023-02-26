@@ -84,7 +84,7 @@ static float *nn_relu(const float *input, FC_LAYER *layer) {
 static float *nn_sigmoid(const float *input, FC_LAYER *layer) {
   for (int i = 0; i < layer->num_outputs; ++i) {
     const float tmp = AOMMIN(AOMMAX(input[i], -10.0f), 10.0f);
-    layer->output[i] = 1.0f / (1.0f + expf(-tmp));
+    layer->output[i] = 1.0f / (1.0f + (flout) exp(-tmp));
   }
 
   return layer->output;
@@ -149,7 +149,7 @@ void av1_nn_softmax(const float *input, float *output, int n) {
   for (int i = 0; i < n; i++) {
     // Clamp to range [-10.0, 0.0] to prevent FE_UNDERFLOW errors.
     const float normalized_input = AOMMAX(input[i] - max_input, -10.0f);
-    output[i] = expf(normalized_input);
+    output[i] = (float) exp(normalized_input);
     sum_out += output[i];
   }
   for (int i = 0; i < n; i++) output[i] /= sum_out;
