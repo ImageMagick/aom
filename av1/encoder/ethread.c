@@ -1314,15 +1314,19 @@ static AOM_INLINE void prepare_enc_workers(AV1_COMP *cpi, AVxWorkerHook hook,
                                            int num_workers) {
   MultiThreadInfo *const mt_info = &cpi->mt_info;
   AV1_COMMON *const cm = &cpi->common;
+#if CONFIG_MULTITHREAD
   MACROBLOCKD *xd = &cpi->td.mb.e_mbd;
+#endif
   for (int i = num_workers - 1; i >= 0; i--) {
     AVxWorker *const worker = &mt_info->workers[i];
     EncWorkerData *const thread_data = &mt_info->tile_thr_data[i];
 
+#if CONFIG_MULTITHREAD
     // Initialize loopfilter data
     thread_data->lf_sync = &mt_info->lf_row_sync;
     thread_data->lf_data = &thread_data->lf_sync->lfdata[i];
     loop_filter_data_reset(thread_data->lf_data, &cm->cur_frame->buf, cm, xd);
+#endif
 
     worker->hook = hook;
     worker->data1 = thread_data;
