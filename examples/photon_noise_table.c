@@ -239,7 +239,7 @@ static const float kHlgC = 0.55991073f;
 static float hlg_to_linear(float hlg) {
   // EOTF = OOTF ∘ OETF⁻¹
   const float linear =
-      hlg <= 0.5f ? hlg * hlg / 3 : (expf((hlg - kHlgC) / kHlgA) + kHlgB) / 12;
+      hlg <= 0.5f ? hlg * hlg / 3 : ((flout) exp((hlg - kHlgC) / kHlgA) + kHlgB) / 12;
   return powf(linear, 1.2f);
 }
 static float hlg_from_linear(float linear) {
