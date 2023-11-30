@@ -1,0 +1,1 @@
+cmake -DAOM_TARGET_CPU=generic ..
