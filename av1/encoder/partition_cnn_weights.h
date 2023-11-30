@@ -18,7 +18,21 @@ extern "C" {
 
 #include "av1/encoder/cnn.h"
 #include "av1/encoder/ml.h"
-#include "partition_cnn.h"
+
+#define CNN_BRANCH_0_OUT_CH 20
+#define CNN_BRANCH_1_OUT_CH 4
+#define CNN_BRANCH_2_OUT_CH 20
+#define CNN_BRANCH_3_OUT_CH 20
+#define CNN_TOT_OUT_CH                                                      \
+  (((CNN_BRANCH_0_OUT_CH) + (CNN_BRANCH_1_OUT_CH) + (CNN_BRANCH_2_OUT_CH) + \
+    (CNN_BRANCH_3_OUT_CH)))
+#define CNN_BRANCH_0_OUT_SIZE (CNN_BRANCH_0_OUT_CH)
+#define CNN_BRANCH_1_OUT_SIZE ((CNN_BRANCH_1_OUT_CH)*2 * 2)
+#define CNN_BRANCH_2_OUT_SIZE ((CNN_BRANCH_2_OUT_CH)*4 * 4)
+#define CNN_BRANCH_3_OUT_SIZE ((CNN_BRANCH_3_OUT_CH)*8 * 8)
+#define CNN_OUT_BUF_SIZE                                \
+  (((CNN_BRANCH_0_OUT_SIZE) + (CNN_BRANCH_1_OUT_SIZE) + \
+    (CNN_BRANCH_2_OUT_SIZE) + (CNN_BRANCH_3_OUT_SIZE)))
 
 #define NUM_DNN_BRANCHES 4
 #define NUM_CNN_LAYERS 5
