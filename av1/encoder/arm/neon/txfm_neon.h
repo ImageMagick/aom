@@ -9,11 +9,18 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#define VERSION_MAJOR 3
-#define VERSION_MINOR 7
-#define VERSION_PATCH 1
-#define VERSION_EXTRA ""
-#define VERSION_PACKED \
-  ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))
-#define VERSION_STRING_NOSP "v3.7.1"
-#define VERSION_STRING " v3.7.1"
+#ifndef AOM_AV1_ENCODER_ARM_NEON_TXFM_NEON_H_
+#define AOM_AV1_ENCODER_ARM_NEON_TXFM_NEON_H_
+
+#include "aom/aom_integer.h"  // For AOM_INLINE.
+
+static AOM_INLINE void ud_adjust_input_and_stride(int ud_flip,
+                                                  const int16_t **input,
+                                                  int *stride, int out_size) {
+  if (ud_flip) {
+    *input = *input + (out_size - 1) * *stride;
+    *stride = -*stride;
+  }
+}
+
+#endif  // AOM_AV1_ENCODER_ARM_NEON_TXFM_NEON_H_
