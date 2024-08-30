@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2019, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -18,8 +18,10 @@
 /*! @} - end defgroup gf_group_algo */
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 
+#include "aom_dsp/aom_dsp_common.h"
 #include "aom_mem/aom_mem.h"
 #include "config/aom_config.h"
 #include "config/aom_scale_rtcd.h"
@@ -892,13 +894,14 @@ static int adjust_boost_bits_for_target_level(const AV1_COMP *const cpi,
 }
 
 // Allocate bits to each frame in a GF / ARF group
-double layer_fraction[MAX_ARF_LAYERS + 1] = { 1.0,  0.70, 0.55, 0.60,
-                                              0.60, 1.0,  1.0 };
 static void allocate_gf_group_bits(GF_GROUP *gf_group,
                                    PRIMARY_RATE_CONTROL *const p_rc,
                                    RATE_CONTROL *const rc,
                                    int64_t gf_group_bits, int gf_arf_bits,
                                    int key_frame, int use_arf) {
+  static const double layer_fraction[MAX_ARF_LAYERS + 1] = { 1.0,  0.70, 0.55,
+                                                             0.60, 0.60, 1.0,
+                                                             1.0 };
   int64_t total_group_bits = gf_group_bits;
   int base_frame_bits;
   const int gf_group_size = gf_group->size;
@@ -944,7 +947,10 @@ static void allocate_gf_group_bits(GF_GROUP *gf_group,
       case ARF_UPDATE:
       case INTNL_ARF_UPDATE:
         arf_extra_bits = layer_extra_bits[gf_group->layer_depth[idx]];
-        gf_group->bit_allocation[idx] = base_frame_bits + arf_extra_bits;
+        gf_group->bit_allocation[idx] =
+            (base_frame_bits > INT_MAX - arf_extra_bits)
+                ? INT_MAX
+                : (base_frame_bits + arf_extra_bits);
         break;
       case INTNL_OVERLAY_UPDATE:
       case OVERLAY_UPDATE: gf_group->bit_allocation[idx] = 0; break;
@@ -962,7 +968,7 @@ static void allocate_gf_group_bits(GF_GROUP *gf_group,
 }
 
 // Returns true if KF group and GF group both are almost completely static.
-static INLINE int is_almost_static(double gf_zero_motion, int kf_zero_motion,
+static inline int is_almost_static(double gf_zero_motion, int kf_zero_motion,
                                    int is_lap_enabled) {
   if (is_lap_enabled) {
     /*
@@ -977,7 +983,7 @@ static INLINE int is_almost_static(double gf_zero_motion, int kf_zero_motion,
 }
 
 #define ARF_ABS_ZOOM_THRESH 4.4
-static INLINE int detect_gf_cut(AV1_COMP *cpi, int frame_index, int cur_start,
+static inline int detect_gf_cut(AV1_COMP *cpi, int frame_index, int cur_start,
                                 int flash_detected, int active_max_gf_interval,
                                 int active_min_gf_interval,
                                 GF_GROUP_STATS *gf_stats) {
@@ -1080,15 +1086,16 @@ static int is_shorter_gf_interval_better(
 #define HALF_FILT_LEN (SMOOTH_FILT_LEN / 2)
 #define WINDOW_SIZE 7
 #define HALF_WIN (WINDOW_SIZE / 2)
-// A 7-tap gaussian smooth filter
-const double smooth_filt[SMOOTH_FILT_LEN] = { 0.006, 0.061, 0.242, 0.383,
-                                              0.242, 0.061, 0.006 };
 
 // Smooth filter intra_error and coded_error in firstpass stats.
 // If stats[i].is_flash==1, the ith element should not be used in the filtering.
 static void smooth_filter_stats(const FIRSTPASS_STATS *stats, int start_idx,
                                 int last_idx, double *filt_intra_err,
                                 double *filt_coded_err) {
+  // A 7-tap gaussian smooth filter
+  static const double smooth_filt[SMOOTH_FILT_LEN] = { 0.006, 0.061, 0.242,
+                                                       0.383, 0.242, 0.061,
+                                                       0.006 };
   int i, j;
   for (i = start_idx; i <= last_idx; i++) {
     double total_wt = 0;
@@ -2214,7 +2221,7 @@ static void define_gf_group_pass0(AV1_COMP *cpi) {
   }
 }
 
-static INLINE void set_baseline_gf_interval(PRIMARY_RATE_CONTROL *p_rc,
+static inline void set_baseline_gf_interval(PRIMARY_RATE_CONTROL *p_rc,
                                             int arf_position) {
   p_rc->baseline_gf_interval = arf_position;
 }
@@ -3034,8 +3041,8 @@ static int64_t get_kf_group_bits(AV1_COMP *cpi, double kf_group_err,
       double vbr_corpus_complexity_lap =
           cpi->oxcf.rc_cfg.vbr_corpus_complexity_lap / 10.0;
       /* Get the average corpus complexity of the frame */
-      kf_group_bits = (int64_t)(
-          kf_group_bits * (kf_group_avg_error / vbr_corpus_complexity_lap));
+      kf_group_bits = (int64_t)(kf_group_bits * (kf_group_avg_error /
+                                                 vbr_corpus_complexity_lap));
     }
   } else {
     kf_group_bits = (int64_t)(twopass->bits_left *
@@ -3401,17 +3408,19 @@ static int get_section_target_bandwidth(AV1_COMP *cpi) {
   CurrentFrame *const current_frame = &cm->current_frame;
   RATE_CONTROL *const rc = &cpi->rc;
   TWO_PASS *const twopass = &cpi->ppi->twopass;
-  int section_target_bandwidth;
+  int64_t section_target_bandwidth;
   const int frames_left = (int)(twopass->stats_buf_ctx->total_stats->count -
                                 current_frame->frame_number);
   if (cpi->ppi->lap_enabled)
-    section_target_bandwidth = (int)rc->avg_frame_bandwidth;
-  else
-    section_target_bandwidth = (int)(twopass->bits_left / frames_left);
-  return section_target_bandwidth;
+    section_target_bandwidth = rc->avg_frame_bandwidth;
+  else {
+    section_target_bandwidth = twopass->bits_left / frames_left;
+    section_target_bandwidth = AOMMIN(section_target_bandwidth, INT_MAX);
+  }
+  return (int)section_target_bandwidth;
 }
 
-static INLINE void set_twopass_params_based_on_fp_stats(
+static inline void set_twopass_params_based_on_fp_stats(
     AV1_COMP *cpi, const FIRSTPASS_STATS *this_frame_ptr) {
   if (this_frame_ptr == NULL) return;
 
@@ -4132,7 +4141,12 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
   }
 
   // Target vs actual bits for this arf group.
-  twopass->rolling_arf_group_target_bits += rc->base_frame_target;
+  if (twopass->rolling_arf_group_target_bits >
+      INT_MAX - rc->base_frame_target) {
+    twopass->rolling_arf_group_target_bits = INT_MAX;
+  } else {
+    twopass->rolling_arf_group_target_bits += rc->base_frame_target;
+  }
   twopass->rolling_arf_group_actual_bits += rc->projected_frame_size;
 
   // Calculate the pct rc error.
@@ -4267,8 +4281,9 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
       if (rc->projected_frame_size < fast_extra_thresh) {
         p_rc->vbr_bits_off_target_fast +=
             fast_extra_thresh - rc->projected_frame_size;
-        p_rc->vbr_bits_off_target_fast = AOMMIN(p_rc->vbr_bits_off_target_fast,
-                                                (4 * rc->avg_frame_bandwidth));
+        p_rc->vbr_bits_off_target_fast =
+            AOMMIN(p_rc->vbr_bits_off_target_fast,
+                   (4 * (int64_t)rc->avg_frame_bandwidth));
       }
     }
 

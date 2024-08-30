@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2016, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -110,7 +110,7 @@ static void force_wmtype(WarpedMotionParams *wm, TransformationType wmtype) {
 }
 
 #if CONFIG_AV1_HIGHBITDEPTH
-static INLINE int generic_sad_highbd(const uint16_t *const ref, int ref_stride,
+static inline int generic_sad_highbd(const uint16_t *const ref, int ref_stride,
                                      const uint16_t *const dst, int dst_stride,
                                      int p_width, int p_height) {
   // This function should only be called for patches smaller than
@@ -215,7 +215,7 @@ static int64_t highbd_warp_error(WarpedMotionParams *wm,
 }
 #endif
 
-static INLINE int generic_sad(const uint8_t *const ref, int ref_stride,
+static inline int generic_sad(const uint8_t *const ref, int ref_stride,
                               const uint8_t *const dst, int dst_stride,
                               int p_width, int p_height) {
   // This function should only be called for patches smaller than

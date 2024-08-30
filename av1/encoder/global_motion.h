@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2016, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -14,9 +14,8 @@
 
 #include "aom/aom_integer.h"
 #include "aom_dsp/flow_estimation/flow_estimation.h"
-#include "aom_scale/yv12config.h"
 #include "aom_util/aom_pthread.h"
-#include "aom_util/aom_thread.h"
+#include "av1/encoder/enc_enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,11 +57,11 @@ typedef struct {
   // next_frame_to_process[i] will hold the count of next reference frame to be
   // processed in the direction 'i'.
   int8_t next_frame_to_process[MAX_DIRECTIONS];
-} JobInfo;
+} GlobalMotionJobInfo;
 
 typedef struct {
   // Data related to assigning jobs for global motion multi-threading.
-  JobInfo job_info;
+  GlobalMotionJobInfo job_info;
 
 #if CONFIG_MULTITHREAD
   // Mutex lock used while dispatching jobs.

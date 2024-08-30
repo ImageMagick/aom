@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2019, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -144,7 +144,7 @@ void av1_prepare_motion_search_features_block(
 
 // A simplified version of set_offsets meant to be used for
 // simple_motion_search.
-static INLINE void set_offsets_for_motion_search(const AV1_COMP *const cpi,
+static inline void set_offsets_for_motion_search(const AV1_COMP *const cpi,
                                                  MACROBLOCK *const x,
                                                  int mi_row, int mi_col,
                                                  BLOCK_SIZE bsize) {
@@ -191,7 +191,7 @@ void av1_init_simple_motion_search_mvs_for_sb(const AV1_COMP *cpi,
                                               SIMPLE_MOTION_DATA_TREE *sms_root,
                                               int mi_row, int mi_col);
 
-static INLINE int is_full_sb(const CommonModeInfoParams *const mi_params,
+static inline int is_full_sb(const CommonModeInfoParams *const mi_params,
                              int mi_row, int mi_col, BLOCK_SIZE sb_size) {
   const int sb_mi_wide = mi_size_wide[sb_size];
   const int sb_mi_high = mi_size_high[sb_size];
@@ -204,7 +204,7 @@ static INLINE int is_full_sb(const CommonModeInfoParams *const mi_params,
 // Do not use this criteria for screen content videos.
 // Since screen content videos could often find good predictors and the largest
 // block size is likely to be used.
-static INLINE int use_auto_max_partition(const AV1_COMP *const cpi,
+static inline int use_auto_max_partition(const AV1_COMP *const cpi,
                                          BLOCK_SIZE sb_size, int mi_row,
                                          int mi_col) {
   assert(IMPLIES(cpi->ppi->gf_group.size > 0,
@@ -233,11 +233,11 @@ static BLOCK_SIZE dim_to_size(int dim) {
   }
 }
 
-static AOM_INLINE void set_max_min_partition_size(SuperBlockEnc *sb_enc,
-                                                  AV1_COMP *cpi, MACROBLOCK *x,
-                                                  const SPEED_FEATURES *sf,
-                                                  BLOCK_SIZE sb_size,
-                                                  int mi_row, int mi_col) {
+static inline void set_max_min_partition_size(SuperBlockEnc *sb_enc,
+                                              AV1_COMP *cpi, MACROBLOCK *x,
+                                              const SPEED_FEATURES *sf,
+                                              BLOCK_SIZE sb_size, int mi_row,
+                                              int mi_col) {
   const AV1_COMMON *cm = &cpi->common;
 
   sb_enc->max_partition_size =

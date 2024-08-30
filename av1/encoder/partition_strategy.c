@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2019, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -31,7 +31,7 @@
 #include "av1/encoder/rdopt.h"
 
 #if !CONFIG_REALTIME_ONLY
-static AOM_INLINE void simple_motion_search_prune_part_features(
+static inline void simple_motion_search_prune_part_features(
     AV1_COMP *const cpi, MACROBLOCK *x, SIMPLE_MOTION_DATA_TREE *sms_tree,
     int mi_row, int mi_col, BLOCK_SIZE bsize, float *features,
     int features_to_get);
@@ -78,7 +78,7 @@ static bool ext_ml_model_decision_after_part_ab(
     int *const partition_vert4_allowed, unsigned int pb_source_variance,
     int mi_row, int mi_col);
 
-static INLINE int convert_bsize_to_idx(BLOCK_SIZE bsize) {
+static inline int convert_bsize_to_idx(BLOCK_SIZE bsize) {
   switch (bsize) {
     case BLOCK_128X128: return 0;
     case BLOCK_64X64: return 1;
@@ -341,7 +341,7 @@ void av1_intra_mode_cnn_partition(const AV1_COMMON *const cm, MACROBLOCK *x,
   }
 }
 
-static INLINE int get_simple_motion_search_prune_agg(int qindex,
+static inline int get_simple_motion_search_prune_agg(int qindex,
                                                      int prune_level,
                                                      int is_rect_part) {
   assert(prune_level < TOTAL_AGG_LVLS);
@@ -521,7 +521,7 @@ static int simple_motion_search_get_best_ref(
 //  - whether a left marcoblock exists
 //  - width of left macroblock
 //  - height of left macroblock
-static AOM_INLINE void simple_motion_search_prune_part_features(
+static inline void simple_motion_search_prune_part_features(
     AV1_COMP *const cpi, MACROBLOCK *x, SIMPLE_MOTION_DATA_TREE *sms_tree,
     int mi_row, int mi_col, BLOCK_SIZE bsize, float *features,
     int features_to_get) {
@@ -964,8 +964,8 @@ BLOCK_SIZE av1_predict_max_partition(const AV1_COMP *const cpi,
 
 // Get the minimum partition block width and height(in log scale) under a
 // SIMPLE_MOTION_DATA_TREE.
-static AOM_INLINE void get_min_bsize(const SIMPLE_MOTION_DATA_TREE *sms_tree,
-                                     int *min_bw, int *min_bh) {
+static inline void get_min_bsize(const SIMPLE_MOTION_DATA_TREE *sms_tree,
+                                 int *min_bw, int *min_bh) {
   if (!sms_tree) return;
 
   const BLOCK_SIZE bsize = sms_tree->block_size;
@@ -994,7 +994,7 @@ static AOM_INLINE void get_min_bsize(const SIMPLE_MOTION_DATA_TREE *sms_tree,
   }
 }
 
-static INLINE void add_rd_feature(int64_t rd, int64_t best_rd, float *features,
+static inline void add_rd_feature(int64_t rd, int64_t best_rd, float *features,
                                   int *feature_idx) {
   const int rd_valid = rd > 0 && rd < INT64_MAX;
   const float rd_ratio = rd_valid ? (float)rd / best_rd : 1.0f;
@@ -1723,7 +1723,7 @@ void av1_prune_partitions_before_search(AV1_COMP *const cpi,
 }
 
 #ifndef NDEBUG
-static AOM_INLINE int is_bsize_square(BLOCK_SIZE bsize) {
+static inline int is_bsize_square(BLOCK_SIZE bsize) {
   return block_size_wide[bsize] == block_size_high[bsize];
 }
 #endif  // NDEBUG
@@ -1761,7 +1761,7 @@ void av1_prune_partitions_by_max_min_bsize(SuperBlockEnc *sb_enc,
 
 // Decide whether to evaluate the AB partition specified by part_type based on
 // split and HORZ/VERT info
-int evaluate_ab_partition_based_on_split(
+static int evaluate_ab_partition_based_on_split(
     const PC_TREE *pc_tree, PARTITION_TYPE rect_part,
     const RD_RECT_PART_WIN_INFO *rect_part_win_info, int qindex, int split_idx1,
     int split_idx2) {
@@ -2522,7 +2522,7 @@ void av1_prepare_motion_search_features_block(
 }
 #endif  // !CONFIG_REALTIME_ONLY
 
-static INLINE void init_simple_motion_search_mvs(
+static inline void init_simple_motion_search_mvs(
     SIMPLE_MOTION_DATA_TREE *sms_tree, const FULLPEL_MV *start_mvs) {
   memcpy(sms_tree->start_mvs, start_mvs, sizeof(sms_tree->start_mvs));
   av1_zero(sms_tree->sms_none_feat);

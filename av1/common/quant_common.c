@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2016, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -251,7 +251,7 @@ const qm_val_t *av1_qmatrix(const CommonQuantParams *quant_params, int qmlevel,
 
 // Returns true if the tx_type corresponds to non-identity transform in both
 // horizontal and vertical directions.
-static INLINE bool is_2d_transform(TX_TYPE tx_type) { return (tx_type < IDTX); }
+static inline bool is_2d_transform(TX_TYPE tx_type) { return (tx_type < IDTX); }
 
 const qm_val_t *av1_get_iqmatrix(const CommonQuantParams *quant_params,
                                  const MACROBLOCKD *xd, int plane,

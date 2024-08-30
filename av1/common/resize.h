@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2016, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Filters for factor of 2 downsampling.
+static const int16_t av1_down2_symeven_half_filter[] = { 56, 12, -3, -1 };
+static const int16_t av1_down2_symodd_half_filter[] = { 64, 35, 0, -3 };
 
 bool av1_resize_plane(const uint8_t *input, int height, int width,
                       int in_stride, uint8_t *output, int height2, int width2,
@@ -93,8 +97,17 @@ void av1_calculate_unscaled_superres_size(int *width, int *height, int denom);
 void av1_superres_upscale(AV1_COMMON *cm, BufferPool *const pool,
                           bool alloc_pyramid);
 
+bool av1_resize_plane_to_half(const uint8_t *const input, int height, int width,
+                              int in_stride, uint8_t *output, int height2,
+                              int width2, int out_stride);
+
+void down2_symeven(const uint8_t *const input, int length, uint8_t *output,
+                   int start_offset);
+
+bool should_resize_by_half(int height, int width, int height2, int width2);
+
 // Returns 1 if a superres upscaled frame is scaled and 0 otherwise.
-static INLINE int av1_superres_scaled(const AV1_COMMON *cm) {
+static inline int av1_superres_scaled(const AV1_COMMON *cm) {
   // Note: for some corner cases (e.g. cm->width of 1), there may be no scaling
   // required even though cm->superres_scale_denominator != SCALE_NUMERATOR.
   // So, the following check is more accurate.
@@ -102,7 +115,7 @@ static INLINE int av1_superres_scaled(const AV1_COMMON *cm) {
 }
 
 // The optimized scaler av1_resize_and_extend_frame() can only handle scaling
-// ratios >= 1/4 and <= 16. See comment in aom_convolve8_c() for detail.
+// ratios >= 1/4 and <= 16. See comment in aom_scaled_2d_c() for detail.
 // Visual assessment shows that if the scaling ratio or its reciprocal is not a
 // multiple of 1/16, there are some artifacts in the output of the optimized
 // scaler, especially on lines, due to non-exact ratio representation. SSSE3
@@ -111,7 +124,7 @@ static INLINE int av1_superres_scaled(const AV1_COMMON *cm) {
 //
 // Use the non-normative scaler av1_resize_and_extend_frame_nonnormative()
 // for other scaling ratios.
-static INLINE bool av1_has_optimized_scaler(const int src_width,
+static inline bool av1_has_optimized_scaler(const int src_width,
                                             const int src_height,
                                             const int dst_width,
                                             const int dst_height) {

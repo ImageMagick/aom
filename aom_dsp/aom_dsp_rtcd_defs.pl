@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2017, Alliance for Open Media. All rights reserved
+## Copyright (c) 2017, Alliance for Open Media. All rights reserved.
 ##
 ## This source code is subject to the terms of the BSD 2 Clause License and
 ## the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -492,7 +492,6 @@ if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
 #
 # Sub Pixel Filters
 #
-add_proto qw/void aom_convolve8/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
 add_proto qw/void aom_convolve_copy/,             "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, int w, int h";
 add_proto qw/void aom_convolve8_horiz/,           "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h";
 add_proto qw/void aom_convolve8_vert/,            "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const int16_t *filter_x, int x_step_q4, const int16_t *filter_y, int y_step_q4, int w, int h";
@@ -502,7 +501,7 @@ specialize qw/aom_convolve8_horiz     neon neon_dotprod neon_i8mm ssse3/, "$avx2
 specialize qw/aom_convolve8_vert      neon neon_dotprod neon_i8mm ssse3/, "$avx2_ssse3";
 
 add_proto qw/void aom_scaled_2d/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
-specialize qw/aom_scaled_2d ssse3 neon/;
+specialize qw/aom_scaled_2d ssse3 neon neon_dotprod neon_i8mm/;
 
 if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
   add_proto qw/void aom_highbd_convolve_copy/, "const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, int w, int h";
@@ -1044,7 +1043,6 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
     add_proto qw/void/, "aom_sad${w}x${h}x4d", "const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_ptr[4], int ref_stride, uint32_t sad_array[4]";
     add_proto qw/void/, "aom_sad${w}x${h}x3d", "const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_ptr[4], int ref_stride, uint32_t sad_array[4]";
     add_proto qw/void/, "aom_sad_skip_${w}x${h}x4d", "const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_ptr[4], int ref_stride, uint32_t sad_array[4]";
-    add_proto qw/void/, "aom_masked_sad${w}x${h}x4d", "const uint8_t *src, int src_stride, const uint8_t *ref[4], int ref_stride, const uint8_t *second_pred, const uint8_t *msk, int msk_stride, int invert_mask, unsigned sads[4]";
   }
 
   specialize qw/aom_sad128x128x4d avx2 sse2 neon neon_dotprod/;
@@ -1120,33 +1118,6 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   specialize qw/aom_sad8x32x3d         neon/;
   specialize qw/aom_sad4x16x3d         neon/;
 
-  specialize qw/aom_masked_sad128x128x4d  ssse3 neon/;
-  specialize qw/aom_masked_sad128x64x4d   ssse3 neon/;
-  specialize qw/aom_masked_sad64x128x4d   ssse3 neon/;
-  specialize qw/aom_masked_sad64x64x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad64x32x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad64x16x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad32x64x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad32x32x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad32x16x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad32x8x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad16x64x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad16x32x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad16x16x4d    ssse3 neon/;
-  specialize qw/aom_masked_sad16x8x4d     ssse3 neon/;
-
-  specialize qw/aom_masked_sad8x16x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad8x8x4d      ssse3 neon/;
-  specialize qw/aom_masked_sad8x4x4d      ssse3 neon/;
-  specialize qw/aom_masked_sad4x16x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad4x8x4d      ssse3 neon/;
-  specialize qw/aom_masked_sad4x4x4d      ssse3 neon/;
-
-  specialize qw/aom_masked_sad4x16x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad16x4x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad8x32x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad32x8x4d     ssse3 neon/;
-  specialize qw/aom_masked_sad64x16x4d    ssse3 neon/;
   #
   # Multi-block SAD, comparing a reference to N independent blocks
   #
@@ -1355,6 +1326,11 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
         specialize "aom_highbd_${bd}_mse16x8", qw/neon neon_dotprod/;
         specialize "aom_highbd_${bd}_mse8x16", qw/neon neon_dotprod/;
         specialize "aom_highbd_${bd}_mse8x8", qw/sse2 neon neon_dotprod/;
+      } elsif ($bd eq 10) {
+        specialize "aom_highbd_${bd}_mse16x16", qw/avx2 sse2 neon sve/;
+        specialize "aom_highbd_${bd}_mse16x8", qw/neon sve/;
+        specialize "aom_highbd_${bd}_mse8x16", qw/neon sve/;
+        specialize "aom_highbd_${bd}_mse8x8", qw/sse2 neon sve/;
       } else {
         specialize "aom_highbd_${bd}_mse16x16", qw/sse2 neon sve/;
         specialize "aom_highbd_${bd}_mse16x8", qw/neon sve/;
@@ -1794,7 +1770,7 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
     specialize qw/aom_compute_correlation sse4_1 avx2/;
 
     add_proto qw/void aom_compute_flow_at_point/, "const uint8_t *src, const uint8_t *ref, int x, int y, int width, int height, int stride, double *u, double *v";
-    specialize qw/aom_compute_flow_at_point sse4_1 avx2 neon/;
+    specialize qw/aom_compute_flow_at_point sse4_1 avx2 neon sve/;
   }
 
 }  # CONFIG_AV1_ENCODER

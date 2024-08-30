@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2023, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -36,7 +36,7 @@ static int arm_get_cpu_caps(void) {
 
 // sysctlbyname() parameter documentation for instruction set characteristics:
 // https://developer.apple.com/documentation/kernel/1387446-sysctlbyname/determining_instruction_set_characteristics
-static INLINE bool have_feature(const char *feature) {
+static inline bool have_feature(const char *feature) {
   int64_t feature_present = 0;
   size_t size = sizeof(feature_present);
   if (sysctlbyname(feature, &feature_present, &size, NULL, 0) != 0) {
@@ -89,7 +89,7 @@ static int arm_get_cpu_caps(void) {
   return flags;
 }
 
-#elif defined(ANDROID_USE_CPU_FEATURES_LIB)
+#elif defined(AOM_USE_ANDROID_CPU_FEATURES)
 
 static int arm_get_cpu_caps(void) {
   int flags = 0;
