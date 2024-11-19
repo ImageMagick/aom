@@ -38,7 +38,9 @@
 #include "av1/encoder/ratectrl.h"
 #include "av1/encoder/rc_utils.h"
 #include "av1/encoder/temporal_filter.h"
+#if CONFIG_THREE_PASS
 #include "av1/encoder/thirdpass.h"
+#endif
 #include "av1/encoder/tpl_model.h"
 #include "av1/encoder/encode_strategy.h"
 
@@ -47,8 +49,10 @@
 #define GROUP_ADAPTIVE_MAXQ 1
 
 static void init_gf_stats(GF_GROUP_STATS *gf_stats);
+#if CONFIG_THREE_PASS
 static int define_gf_group_pass3(AV1_COMP *cpi, EncodeFrameParams *frame_params,
                                  int is_final_pass);
+#endif
 
 // Calculate an active area of the image that discounts formatting
 // bars and partially discounts other 0 energy areas.
@@ -171,6 +175,7 @@ static void twopass_update_bpm_factor(AV1_COMP *cpi, int rate_err_tol) {
   const double min_fac = 1.0 - adj_limit;
   const double max_fac = 1.0 + adj_limit;
 
+#if CONFIG_THREE_PASS
   if (cpi->third_pass_ctx && cpi->third_pass_ctx->frame_info_count > 0) {
     int64_t actual_bits = 0;
     int64_t target_bits = 0;
@@ -198,6 +203,7 @@ static void twopass_update_bpm_factor(AV1_COMP *cpi, int rate_err_tol) {
           AOMMAX(min_fac, AOMMIN(max_fac, twopass->bpm_factor));
     }
   }
+#endif  // CONFIG_THREE_PASS
 
   int err_estimate = p_rc->rate_error_estimate;
   int64_t total_actual_bits = p_rc->total_actual_bits;
@@ -254,16 +260,18 @@ static void twopass_update_bpm_factor(AV1_COMP *cpi, int rate_err_tol) {
   }
 }
 
-static const double q_div_term[(QINDEX_RANGE >> 5) + 1] = { 32.0, 40.0, 46.0,
-                                                            52.0, 56.0, 60.0,
-                                                            64.0, 68.0, 72.0 };
+static const double q_div_term[(QINDEX_RANGE >> 4) + 1] = {
+  18.0, 30.0, 38.0, 44.0, 47.0, 50.0, 52.0, 54.0, 56.0,
+  58.0, 60.0, 62.0, 64.0, 66.0, 68.0, 70.0, 72.0
+};
+
 #define EPMB_SCALER 1250000
 static double calc_correction_factor(double err_per_mb, int q) {
   double power_term = 0.90;
-  const int index = q >> 5;
+  const int index = q >> 4;
   const double divisor =
       q_div_term[index] +
-      (((q_div_term[index + 1] - q_div_term[index]) * (q % 32)) / 32.0);
+      (((q_div_term[index + 1] - q_div_term[index]) * (q % 16)) / 16.0);
   double error_term = EPMB_SCALER * pow(err_per_mb, power_term);
   return error_term / divisor;
 }
@@ -337,6 +345,10 @@ static int get_twopass_worst_quality(AV1_COMP *cpi, const double av_frame_err,
     const uint64_t target_norm_bits_per_mb =
         ((uint64_t)av_target_bandwidth << BPER_MB_NORMBITS) / active_mbs;
     int rate_err_tol = AOMMIN(rc_cfg->under_shoot_pct, rc_cfg->over_shoot_pct);
+    const double size_factor =
+        (active_mbs < 500) ? 0.925 : ((active_mbs > 3000) ? 1.05 : 1.0);
+    const double speed_factor =
+        AOMMIN(1.02, (0.975 + (0.005 * cpi->oxcf.speed)));
 
     // Update bpm correction factor based on previous GOP rate error.
     twopass_update_bpm_factor(cpi, rate_err_tol);
@@ -345,8 +357,9 @@ static int get_twopass_worst_quality(AV1_COMP *cpi, const double av_frame_err,
     // content at the given rate.
     int q = find_qindex_by_rate_with_correction(
         target_norm_bits_per_mb, cpi->common.seq_params->bit_depth,
-        av_err_per_mb, cpi->ppi->twopass.bpm_factor, rc->best_quality,
-        rc->worst_quality);
+        av_err_per_mb,
+        cpi->ppi->twopass.bpm_factor * speed_factor * size_factor,
+        rc->best_quality, rc->worst_quality);
 
     // Restriction on active max q for constrained quality mode.
     if (rc_cfg->mode == AOM_CQ) q = AOMMAX(q, rc_cfg->cq_level);
@@ -2481,6 +2494,7 @@ static void define_gf_group(AV1_COMP *cpi, EncodeFrameParams *frame_params,
     return;
   }
 
+#if CONFIG_THREE_PASS
   if (cpi->third_pass_ctx && oxcf->pass == AOM_RC_THIRD_PASS) {
     int ret = define_gf_group_pass3(cpi, frame_params, is_final_pass);
     if (ret == 0) return;
@@ -2488,6 +2502,7 @@ static void define_gf_group(AV1_COMP *cpi, EncodeFrameParams *frame_params,
     av1_free_thirdpass_ctx(cpi->third_pass_ctx);
     cpi->third_pass_ctx = NULL;
   }
+#endif  // CONFIG_THREE_PASS
 
   // correct frames_to_key when lookahead queue is emptying
   if (cpi->ppi->lap_enabled) {
@@ -2588,6 +2603,7 @@ static void define_gf_group(AV1_COMP *cpi, EncodeFrameParams *frame_params,
         gf_group->update_type[cpi->gf_frame_index] == INTNL_ARF_UPDATE);
 }
 
+#if CONFIG_THREE_PASS
 /*!\brief Define a GF group for the third apss.
  *
  * \ingroup gf_group_algo
@@ -2660,6 +2676,7 @@ static int define_gf_group_pass3(AV1_COMP *cpi, EncodeFrameParams *frame_params,
   frame_params->show_frame = cpi->third_pass_ctx->frame_info[0].is_show_frame;
   return 0;
 }
+#endif  // CONFIG_THREE_PASS
 
 // #define FIXED_ARF_BITS
 #ifdef FIXED_ARF_BITS
@@ -3851,6 +3868,7 @@ void av1_get_second_pass_params(AV1_COMP *cpi,
     }
 
     int need_gf_len = 1;
+#if CONFIG_THREE_PASS
     if (cpi->third_pass_ctx && oxcf->pass == AOM_RC_THIRD_PASS) {
       // set up bitstream to read
       if (!cpi->third_pass_ctx->input_file_name && oxcf->two_pass_output) {
@@ -3884,6 +3902,7 @@ void av1_get_second_pass_params(AV1_COMP *cpi,
       p_rc->gf_intervals[0] = cpi->third_pass_ctx->gop_info.gf_length;
       need_gf_len = 0;
     }
+#endif  // CONFIG_THREE_PASS
 
     if (need_gf_len) {
       // If we cannot obtain GF group length from second_pass_file
@@ -3943,9 +3962,11 @@ void av1_get_second_pass_params(AV1_COMP *cpi,
 
     define_gf_group(cpi, frame_params, 1);
 
+#if CONFIG_THREE_PASS
     // write gop info if needed for third pass. Per-frame info is written after
     // each frame is encoded.
     av1_write_second_pass_gop_info(cpi);
+#endif  // CONFIG_THREE_PASS
 
     av1_tf_info_filtering(&cpi->ppi->tf_info, cpi, gf_group);
 

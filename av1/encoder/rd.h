@@ -20,6 +20,7 @@
 #include "av1/encoder/context_tree.h"
 #include "av1/encoder/cost.h"
 #include "av1/encoder/ratectrl.h"
+#include "config/aom_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -256,8 +257,6 @@ void av1_model_rd_from_var_lapndz(int64_t var, unsigned int n,
 
 void av1_model_rd_curvfit(BLOCK_SIZE bsize, double sse_norm, double xqr,
                           double *rate_f, double *distbysse_f);
-void av1_model_rd_surffit(BLOCK_SIZE bsize, double sse_norm, double xm,
-                          double yl, double *rate_f, double *distbysse_f);
 
 int av1_get_switchable_rate(const MACROBLOCK *x, const MACROBLOCKD *xd,
                             InterpFilter interp_filter, int dual_filter);
@@ -358,7 +357,9 @@ int av1_get_intra_cost_penalty(int qindex, int qdelta,
 void av1_fill_mode_rates(AV1_COMMON *const cm, ModeCosts *mode_costs,
                          FRAME_CONTEXT *fc);
 
+#if !CONFIG_REALTIME_ONLY
 void av1_fill_lr_rates(ModeCosts *mode_costs, FRAME_CONTEXT *fc);
+#endif
 
 void av1_fill_coeff_costs(CoeffCosts *coeff_costs, FRAME_CONTEXT *fc,
                           const int num_planes);
@@ -368,7 +369,9 @@ void av1_fill_mv_costs(const nmv_context *nmvc, int integer_mv, int usehp,
 
 void av1_fill_dv_costs(const nmv_context *ndvc, IntraBCMVCosts *dv_costs);
 
+#if !CONFIG_REALTIME_ONLY
 int av1_get_adaptive_rdmult(const struct AV1_COMP *cpi, double beta);
+#endif
 
 int av1_get_deltaq_offset(aom_bit_depth_t bit_depth, int qindex, double beta);
 

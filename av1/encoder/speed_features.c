@@ -1466,7 +1466,7 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
     if (is_360p_or_larger) {
       sf->part_sf.fixed_partition_size = BLOCK_32X32;
       sf->rt_sf.use_fast_fixed_part = 1;
-      sf->mv_sf.subpel_force_stop = HALF_PEL;
+      sf->rt_sf.reduce_mv_pel_precision_lowcomplex = 2;
     }
     sf->rt_sf.increase_source_sad_thresh = 1;
     sf->rt_sf.part_early_exit_zeromv = 2;
@@ -1580,17 +1580,19 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
       sf->rt_sf.dct_only_palette_nonrd = 1;
       sf->rt_sf.prune_palette_search_nonrd = 1;
       sf->rt_sf.prune_intra_mode_using_best_sad_so_far = true;
+      sf->rt_sf.rc_faster_convergence_static = 1;
+      sf->rt_sf.rc_compute_spatial_var_sc = 1;
     }
     if (speed >= 11) {
       sf->rt_sf.skip_lf_screen = 2;
       sf->rt_sf.skip_cdef_sb = 2;
-      sf->rt_sf.part_early_exit_zeromv = 2;
       sf->rt_sf.prune_palette_search_nonrd = 2;
       sf->rt_sf.increase_color_thresh_palette = 0;
       sf->rt_sf.prune_h_pred_using_best_mode_so_far = true;
       sf->rt_sf.enable_intra_mode_pruning_using_neighbors = true;
     }
-    sf->rt_sf.skip_encoding_non_reference_slide_change = 1;
+    sf->rt_sf.skip_encoding_non_reference_slide_change =
+        cpi->oxcf.rc_cfg.drop_frames_water_mark > 0 ? 1 : 0;
     sf->rt_sf.skip_newmv_flat_blocks_screen = 1;
     sf->rt_sf.use_idtx_nonrd = 1;
     sf->rt_sf.higher_thresh_scene_detection = 0;
@@ -2274,6 +2276,7 @@ static inline void init_rt_sf(REAL_TIME_SPEED_FEATURES *rt_sf) {
   rt_sf->overshoot_detection_cbr = NO_DETECTION;
   rt_sf->check_scene_detection = 0;
   rt_sf->rc_adjust_keyframe = 0;
+  rt_sf->rc_compute_spatial_var_sc = 0;
   rt_sf->prefer_large_partition_blocks = 0;
   rt_sf->use_temporal_noise_estimate = 0;
   rt_sf->fullpel_search_step_param = 0;
@@ -2327,6 +2330,7 @@ static inline void init_rt_sf(REAL_TIME_SPEED_FEATURES *rt_sf) {
   rt_sf->higher_thresh_scene_detection = 1;
   rt_sf->skip_newmv_flat_blocks_screen = 0;
   rt_sf->skip_encoding_non_reference_slide_change = 0;
+  rt_sf->rc_faster_convergence_static = 0;
 }
 
 static fractional_mv_step_fp

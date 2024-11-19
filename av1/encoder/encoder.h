@@ -51,7 +51,9 @@
 #include "av1/encoder/speed_features.h"
 #include "av1/encoder/svc_layercontext.h"
 #include "av1/encoder/temporal_filter.h"
+#if CONFIG_THREE_PASS
 #include "av1/encoder/thirdpass.h"
+#endif
 #include "av1/encoder/tokenize.h"
 #include "av1/encoder/tpl_model.h"
 #include "av1/encoder/av1_noise_estimate.h"
@@ -2564,11 +2566,6 @@ typedef struct AV1_COMP_DATA {
    * Decide to pop the source for this frame from input buffer queue.
    */
   int pop_lookahead;
-
-  /*!
-   * Display order hint of frame whose packed data is in cx_data buffer.
-   */
-  int frame_display_order_hint;
 } AV1_COMP_DATA;
 
 /*!
@@ -3593,10 +3590,12 @@ typedef struct AV1_COMP {
    */
   TWO_PASS_FRAME twopass_frame;
 
+#if CONFIG_THREE_PASS
   /*!
    * Context needed for third pass encoding.
    */
   THIRD_PASS_DEC_CTX *third_pass_ctx;
+#endif
 
   /*!
    * File pointer to second pass log
@@ -3735,12 +3734,6 @@ typedef struct EncodeFrameParams {
 
 /*!\cond */
 
-// EncodeFrameResults contains information about the result of encoding a
-// single frame
-typedef struct {
-  size_t size;  // Size of resulting bitstream
-} EncodeFrameResults;
-
 void av1_initialize_enc(unsigned int usage, enum aom_rc_mode end_usage);
 
 struct AV1_COMP *av1_create_compressor(AV1_PRIMARY *ppi,
@@ -3773,16 +3766,8 @@ void av1_change_config(AV1_COMP *cpi, const AV1EncoderConfig *oxcf,
 aom_codec_err_t av1_check_initial_width(AV1_COMP *cpi, int use_highbitdepth,
                                         int subsampling_x, int subsampling_y);
 
-void av1_init_seq_coding_tools(AV1_PRIMARY *const ppi,
-                               const AV1EncoderConfig *oxcf, int use_svc);
-
 void av1_post_encode_updates(AV1_COMP *const cpi,
                              const AV1_COMP_DATA *const cpi_data);
-
-void av1_scale_references_fpmt(AV1_COMP *cpi, int *ref_buffers_used_map);
-
-void av1_increment_scaled_ref_counts_fpmt(BufferPool *buffer_pool,
-                                          int ref_buffers_used_map);
 
 void av1_release_scaled_references_fpmt(AV1_COMP *cpi);
 
@@ -3849,10 +3834,10 @@ int av1_get_compressed_data(AV1_COMP *cpi, AV1_COMP_DATA *const cpi_data);
  * \callgraph
  * \callergraph
  */
-int av1_encode(AV1_COMP *const cpi, uint8_t *const dest,
+int av1_encode(AV1_COMP *const cpi, uint8_t *const dest, size_t dest_size,
                const EncodeFrameInput *const frame_input,
                const EncodeFrameParams *const frame_params,
-               EncodeFrameResults *const frame_results);
+               size_t *const frame_size);
 
 /*!\cond */
 int av1_get_preview_raw_frame(AV1_COMP *cpi, YV12_BUFFER_CONFIG *dest);
@@ -3884,7 +3869,10 @@ int av1_set_internal_size(AV1EncoderConfig *const oxcf,
 
 int av1_get_quantizer(struct AV1_COMP *cpi);
 
-int av1_convert_sect5obus_to_annexb(uint8_t *buffer, size_t *input_size);
+// This function assumes that the input buffer contains valid OBUs. It should
+// not be called on untrusted input.
+int av1_convert_sect5obus_to_annexb(uint8_t *buffer, size_t buffer_size,
+                                    size_t *input_size);
 
 void av1_alloc_mb_wiener_var_pred_buf(AV1_COMMON *cm, ThreadData *td);
 

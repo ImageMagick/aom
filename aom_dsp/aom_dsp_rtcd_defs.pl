@@ -63,7 +63,10 @@ foreach $w (@tx_dims) {
   push @tx_sizes, [$w, $w];
   foreach $h (@tx_dims) {
     push @tx_sizes, [$w, $h] if ($w >=4 && $h >=4 && ($w == 2*$h || $h == 2*$w));
-    push @tx_sizes, [$w, $h] if ($w >=4 && $h >=4 && ($w == 4*$h || $h == 4*$w));
+    if ((aom_config("CONFIG_REALTIME_ONLY") ne "yes") ||
+        (aom_config("CONFIG_AV1_DECODER") eq "yes")) {
+      push @tx_sizes, [$w, $h] if ($w >=4 && $h >=4 && ($w == 4*$h || $h == 4*$w));
+    }  # !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
   }
 }
 
@@ -87,181 +90,127 @@ foreach (@tx_sizes) {
 
 specialize qw/aom_dc_top_predictor_4x4 neon sse2/;
 specialize qw/aom_dc_top_predictor_4x8 neon sse2/;
-specialize qw/aom_dc_top_predictor_4x16 neon sse2/;
 specialize qw/aom_dc_top_predictor_8x4 neon sse2/;
 specialize qw/aom_dc_top_predictor_8x8 neon sse2/;
 specialize qw/aom_dc_top_predictor_8x16 neon sse2/;
-specialize qw/aom_dc_top_predictor_8x32 neon sse2/;
-specialize qw/aom_dc_top_predictor_16x4 neon sse2/;
 specialize qw/aom_dc_top_predictor_16x8 neon sse2/;
 specialize qw/aom_dc_top_predictor_16x16 neon sse2/;
 specialize qw/aom_dc_top_predictor_16x32 neon sse2/;
-specialize qw/aom_dc_top_predictor_16x64 neon sse2/;
-specialize qw/aom_dc_top_predictor_32x8 neon sse2/;
 specialize qw/aom_dc_top_predictor_32x16 neon sse2 avx2/;
 specialize qw/aom_dc_top_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_dc_top_predictor_32x64 neon sse2 avx2/;
-specialize qw/aom_dc_top_predictor_64x16 neon sse2 avx2/;
 specialize qw/aom_dc_top_predictor_64x32 neon sse2 avx2/;
 specialize qw/aom_dc_top_predictor_64x64 neon sse2 avx2/;
 
 specialize qw/aom_dc_left_predictor_4x4 neon sse2/;
 specialize qw/aom_dc_left_predictor_4x8 neon sse2/;
-specialize qw/aom_dc_left_predictor_4x16 neon sse2/;
 specialize qw/aom_dc_left_predictor_8x4 neon sse2/;
 specialize qw/aom_dc_left_predictor_8x8 neon sse2/;
 specialize qw/aom_dc_left_predictor_8x16 neon sse2/;
-specialize qw/aom_dc_left_predictor_8x32 neon sse2/;
-specialize qw/aom_dc_left_predictor_16x4 neon sse2/;
 specialize qw/aom_dc_left_predictor_16x8 neon sse2/;
 specialize qw/aom_dc_left_predictor_16x16 neon sse2/;
 specialize qw/aom_dc_left_predictor_16x32 neon sse2/;
-specialize qw/aom_dc_left_predictor_16x64 neon sse2/;
-specialize qw/aom_dc_left_predictor_32x8 neon sse2/;
 specialize qw/aom_dc_left_predictor_32x16 neon sse2 avx2/;
 specialize qw/aom_dc_left_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_dc_left_predictor_32x64 neon sse2 avx2/;
-specialize qw/aom_dc_left_predictor_64x16 neon sse2 avx2/;
 specialize qw/aom_dc_left_predictor_64x32 neon sse2 avx2/;
 specialize qw/aom_dc_left_predictor_64x64 neon sse2 avx2/;
 
 specialize qw/aom_dc_128_predictor_4x4 neon sse2/;
 specialize qw/aom_dc_128_predictor_4x8 neon sse2/;
-specialize qw/aom_dc_128_predictor_4x16 neon sse2/;
 specialize qw/aom_dc_128_predictor_8x4 neon sse2/;
 specialize qw/aom_dc_128_predictor_8x8 neon sse2/;
 specialize qw/aom_dc_128_predictor_8x16 neon sse2/;
-specialize qw/aom_dc_128_predictor_8x32 neon sse2/;
-specialize qw/aom_dc_128_predictor_16x4 neon sse2/;
 specialize qw/aom_dc_128_predictor_16x8 neon sse2/;
 specialize qw/aom_dc_128_predictor_16x16 neon sse2/;
 specialize qw/aom_dc_128_predictor_16x32 neon sse2/;
-specialize qw/aom_dc_128_predictor_16x64 neon sse2/;
-specialize qw/aom_dc_128_predictor_32x8 neon sse2/;
 specialize qw/aom_dc_128_predictor_32x16 neon sse2 avx2/;
 specialize qw/aom_dc_128_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_dc_128_predictor_32x64 neon sse2 avx2/;
-specialize qw/aom_dc_128_predictor_64x16 neon sse2 avx2/;
 specialize qw/aom_dc_128_predictor_64x32 neon sse2 avx2/;
 specialize qw/aom_dc_128_predictor_64x64 neon sse2 avx2/;
 
 specialize qw/aom_v_predictor_4x4 neon sse2/;
 specialize qw/aom_v_predictor_4x8 neon sse2/;
-specialize qw/aom_v_predictor_4x16 neon sse2/;
 specialize qw/aom_v_predictor_8x4 neon sse2/;
 specialize qw/aom_v_predictor_8x8 neon sse2/;
 specialize qw/aom_v_predictor_8x16 neon sse2/;
-specialize qw/aom_v_predictor_8x32 neon sse2/;
-specialize qw/aom_v_predictor_16x4 neon sse2/;
 specialize qw/aom_v_predictor_16x8 neon sse2/;
 specialize qw/aom_v_predictor_16x16 neon sse2/;
 specialize qw/aom_v_predictor_16x32 neon sse2/;
-specialize qw/aom_v_predictor_16x64 neon sse2/;
-specialize qw/aom_v_predictor_32x8 neon sse2/;
 specialize qw/aom_v_predictor_32x16 neon sse2 avx2/;
 specialize qw/aom_v_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_v_predictor_32x64 neon sse2 avx2/;
-specialize qw/aom_v_predictor_64x16 neon sse2 avx2/;
 specialize qw/aom_v_predictor_64x32 neon sse2 avx2/;
 specialize qw/aom_v_predictor_64x64 neon sse2 avx2/;
 
 specialize qw/aom_h_predictor_4x4 neon sse2/;
 specialize qw/aom_h_predictor_4x8 neon sse2/;
-specialize qw/aom_h_predictor_4x16 neon sse2/;
 specialize qw/aom_h_predictor_8x4 neon sse2/;
 specialize qw/aom_h_predictor_8x8 neon sse2/;
 specialize qw/aom_h_predictor_8x16 neon sse2/;
-specialize qw/aom_h_predictor_8x32 neon sse2/;
-specialize qw/aom_h_predictor_16x4 neon sse2/;
 specialize qw/aom_h_predictor_16x8 neon sse2/;
 specialize qw/aom_h_predictor_16x16 neon sse2/;
 specialize qw/aom_h_predictor_16x32 neon sse2/;
-specialize qw/aom_h_predictor_16x64 neon sse2/;
-specialize qw/aom_h_predictor_32x8 neon sse2/;
 specialize qw/aom_h_predictor_32x16 neon sse2/;
 specialize qw/aom_h_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_h_predictor_32x64 neon sse2/;
-specialize qw/aom_h_predictor_64x16 neon sse2/;
 specialize qw/aom_h_predictor_64x32 neon sse2/;
 specialize qw/aom_h_predictor_64x64 neon sse2/;
 
 specialize qw/aom_paeth_predictor_4x4 ssse3 neon/;
 specialize qw/aom_paeth_predictor_4x8 ssse3 neon/;
-specialize qw/aom_paeth_predictor_4x16 ssse3 neon/;
 specialize qw/aom_paeth_predictor_8x4 ssse3 neon/;
 specialize qw/aom_paeth_predictor_8x8 ssse3 neon/;
 specialize qw/aom_paeth_predictor_8x16 ssse3 neon/;
-specialize qw/aom_paeth_predictor_8x32 ssse3 neon/;
-specialize qw/aom_paeth_predictor_16x4 ssse3 neon/;
 specialize qw/aom_paeth_predictor_16x8 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_16x16 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_16x32 ssse3 avx2 neon/;
-specialize qw/aom_paeth_predictor_16x64 ssse3 avx2 neon/;
-specialize qw/aom_paeth_predictor_32x8 ssse3 neon/;
 specialize qw/aom_paeth_predictor_32x16 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_32x32 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_32x64 ssse3 avx2 neon/;
-specialize qw/aom_paeth_predictor_64x16 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_64x32 ssse3 avx2 neon/;
 specialize qw/aom_paeth_predictor_64x64 ssse3 avx2 neon/;
 
 specialize qw/aom_smooth_predictor_4x4 neon ssse3/;
 specialize qw/aom_smooth_predictor_4x8 neon ssse3/;
-specialize qw/aom_smooth_predictor_4x16 neon ssse3/;
 specialize qw/aom_smooth_predictor_8x4 neon ssse3/;
 specialize qw/aom_smooth_predictor_8x8 neon ssse3/;
 specialize qw/aom_smooth_predictor_8x16 neon ssse3/;
-specialize qw/aom_smooth_predictor_8x32 neon ssse3/;
-specialize qw/aom_smooth_predictor_16x4 neon ssse3/;
 specialize qw/aom_smooth_predictor_16x8 neon ssse3/;
 specialize qw/aom_smooth_predictor_16x16 neon ssse3/;
 specialize qw/aom_smooth_predictor_16x32 neon ssse3/;
-specialize qw/aom_smooth_predictor_16x64 neon ssse3/;
-specialize qw/aom_smooth_predictor_32x8 neon ssse3/;
 specialize qw/aom_smooth_predictor_32x16 neon ssse3/;
 specialize qw/aom_smooth_predictor_32x32 neon ssse3/;
 specialize qw/aom_smooth_predictor_32x64 neon ssse3/;
-specialize qw/aom_smooth_predictor_64x16 neon ssse3/;
 specialize qw/aom_smooth_predictor_64x32 neon ssse3/;
 specialize qw/aom_smooth_predictor_64x64 neon ssse3/;
 
 specialize qw/aom_smooth_v_predictor_4x4 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_4x8 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_4x16 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_8x4 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_8x8 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_8x16 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_8x32 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_16x4 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_16x8 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_16x16 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_16x32 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_16x64 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_32x8 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_32x16 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_32x32 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_32x64 neon ssse3/;
-specialize qw/aom_smooth_v_predictor_64x16 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_64x32 neon ssse3/;
 specialize qw/aom_smooth_v_predictor_64x64 neon ssse3/;
 
 specialize qw/aom_smooth_h_predictor_4x4 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_4x8 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_4x16 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_8x4 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_8x8 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_8x16 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_8x32 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_16x4 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_16x8 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_16x16 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_16x32 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_16x64 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_32x8 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_32x16 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_32x32 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_32x64 neon ssse3/;
-specialize qw/aom_smooth_h_predictor_64x16 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_64x32 neon ssse3/;
 specialize qw/aom_smooth_h_predictor_64x64 neon ssse3/;
 
@@ -269,41 +218,103 @@ specialize qw/aom_smooth_h_predictor_64x64 neon ssse3/;
 # by multiply and shift.
 specialize qw/aom_dc_predictor_4x4 neon sse2/;
 specialize qw/aom_dc_predictor_4x8 neon sse2/;
-specialize qw/aom_dc_predictor_4x16 neon sse2/;
 specialize qw/aom_dc_predictor_8x4 neon sse2/;
 specialize qw/aom_dc_predictor_8x8 neon sse2/;
 specialize qw/aom_dc_predictor_8x16 neon sse2/;
-specialize qw/aom_dc_predictor_8x32 neon sse2/;
-specialize qw/aom_dc_predictor_16x4 neon sse2/;
 specialize qw/aom_dc_predictor_16x8 neon sse2/;
 specialize qw/aom_dc_predictor_16x16 neon sse2/;
 specialize qw/aom_dc_predictor_16x32 neon sse2/;
-specialize qw/aom_dc_predictor_16x64 neon sse2/;
-specialize qw/aom_dc_predictor_32x8 neon sse2/;
 specialize qw/aom_dc_predictor_32x16 neon sse2 avx2/;
 specialize qw/aom_dc_predictor_32x32 neon sse2 avx2/;
 specialize qw/aom_dc_predictor_32x64 neon sse2 avx2/;
 specialize qw/aom_dc_predictor_64x64 neon sse2 avx2/;
 specialize qw/aom_dc_predictor_64x32 neon sse2 avx2/;
-specialize qw/aom_dc_predictor_64x16 neon sse2 avx2/;
+
+
+if ((aom_config("CONFIG_REALTIME_ONLY") ne "yes") || (aom_config("CONFIG_AV1_DECODER") eq "yes")) {
+  specialize qw/aom_dc_top_predictor_4x16 neon sse2/;
+  specialize qw/aom_dc_top_predictor_8x32 neon sse2/;
+  specialize qw/aom_dc_top_predictor_16x4 neon sse2/;
+  specialize qw/aom_dc_top_predictor_16x64 neon sse2/;
+  specialize qw/aom_dc_top_predictor_32x8 neon sse2/;
+  specialize qw/aom_dc_top_predictor_64x16 neon sse2 avx2/;
+
+  specialize qw/aom_dc_left_predictor_4x16 neon sse2/;
+  specialize qw/aom_dc_left_predictor_8x32 neon sse2/;
+  specialize qw/aom_dc_left_predictor_16x4 neon sse2/;
+  specialize qw/aom_dc_left_predictor_16x64 neon sse2/;
+  specialize qw/aom_dc_left_predictor_32x8 neon sse2/;
+  specialize qw/aom_dc_left_predictor_64x16 neon sse2 avx2/;
+
+  specialize qw/aom_dc_128_predictor_4x16 neon sse2/;
+  specialize qw/aom_dc_128_predictor_8x32 neon sse2/;
+  specialize qw/aom_dc_128_predictor_16x4 neon sse2/;
+  specialize qw/aom_dc_128_predictor_16x64 neon sse2/;
+  specialize qw/aom_dc_128_predictor_32x8 neon sse2/;
+  specialize qw/aom_dc_128_predictor_64x16 neon sse2 avx2/;
+
+  specialize qw/aom_v_predictor_4x16 neon sse2/;
+  specialize qw/aom_v_predictor_8x32 neon sse2/;
+  specialize qw/aom_v_predictor_16x4 neon sse2/;
+  specialize qw/aom_v_predictor_16x64 neon sse2/;
+  specialize qw/aom_v_predictor_32x8 neon sse2/;
+  specialize qw/aom_v_predictor_64x16 neon sse2 avx2/;
+
+  specialize qw/aom_h_predictor_4x16 neon sse2/;
+  specialize qw/aom_h_predictor_8x32 neon sse2/;
+  specialize qw/aom_h_predictor_16x4 neon sse2/;
+  specialize qw/aom_h_predictor_16x64 neon sse2/;
+  specialize qw/aom_h_predictor_32x8 neon sse2/;
+  specialize qw/aom_h_predictor_64x16 neon sse2/;
+
+  specialize qw/aom_paeth_predictor_4x16 ssse3 neon/;
+  specialize qw/aom_paeth_predictor_8x32 ssse3 neon/;
+  specialize qw/aom_paeth_predictor_16x4 ssse3 neon/;
+  specialize qw/aom_paeth_predictor_16x64 ssse3 avx2 neon/;
+  specialize qw/aom_paeth_predictor_32x8 ssse3 neon/;
+  specialize qw/aom_paeth_predictor_64x16 ssse3 avx2 neon/;
+
+  specialize qw/aom_smooth_predictor_4x16 neon ssse3/;
+  specialize qw/aom_smooth_predictor_8x32 neon ssse3/;
+  specialize qw/aom_smooth_predictor_16x4 neon ssse3/;
+  specialize qw/aom_smooth_predictor_16x64 neon ssse3/;
+  specialize qw/aom_smooth_predictor_32x8 neon ssse3/;
+  specialize qw/aom_smooth_predictor_64x16 neon ssse3/;
+
+  specialize qw/aom_smooth_v_predictor_4x16 neon ssse3/;
+  specialize qw/aom_smooth_v_predictor_8x32 neon ssse3/;
+  specialize qw/aom_smooth_v_predictor_16x4 neon ssse3/;
+  specialize qw/aom_smooth_v_predictor_16x64 neon ssse3/;
+  specialize qw/aom_smooth_v_predictor_32x8 neon ssse3/;
+  specialize qw/aom_smooth_v_predictor_64x16 neon ssse3/;
+
+  specialize qw/aom_smooth_h_predictor_4x16 neon ssse3/;
+  specialize qw/aom_smooth_h_predictor_8x32 neon ssse3/;
+  specialize qw/aom_smooth_h_predictor_16x4 neon ssse3/;
+  specialize qw/aom_smooth_h_predictor_16x64 neon ssse3/;
+  specialize qw/aom_smooth_h_predictor_32x8 neon ssse3/;
+  specialize qw/aom_smooth_h_predictor_64x16 neon ssse3/;
+
+  specialize qw/aom_dc_predictor_4x16 neon sse2/;
+  specialize qw/aom_dc_predictor_8x32 neon sse2/;
+  specialize qw/aom_dc_predictor_16x4 neon sse2/;
+  specialize qw/aom_dc_predictor_16x64 neon sse2/;
+  specialize qw/aom_dc_predictor_32x8 neon sse2/;
+  specialize qw/aom_dc_predictor_64x16 neon sse2 avx2/;
+}  # !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
+
 if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
   specialize qw/aom_highbd_v_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_v_predictor_4x16 neon/;
   specialize qw/aom_highbd_v_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_v_predictor_8x32 neon/;
-  specialize qw/aom_highbd_v_predictor_16x4 neon/;
   specialize qw/aom_highbd_v_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_v_predictor_16x64 neon/;
-  specialize qw/aom_highbd_v_predictor_32x8 neon/;
   specialize qw/aom_highbd_v_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_v_predictor_32x64 neon/;
-  specialize qw/aom_highbd_v_predictor_64x16 neon/;
   specialize qw/aom_highbd_v_predictor_64x32 neon/;
   specialize qw/aom_highbd_v_predictor_64x64 neon/;
 
@@ -311,183 +322,202 @@ if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
   # by multiply and shift.
   specialize qw/aom_highbd_dc_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_dc_predictor_4x16 neon/;
   specialize qw/aom_highbd_dc_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_dc_predictor_8x32 neon/;
-  specialize qw/aom_highbd_dc_predictor_16x4 neon/;
   specialize qw/aom_highbd_dc_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_dc_predictor_16x64 neon/;
-  specialize qw/aom_highbd_dc_predictor_32x8 neon/;
   specialize qw/aom_highbd_dc_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_dc_predictor_32x64 neon/;
-  specialize qw/aom_highbd_dc_predictor_64x16 neon/;
   specialize qw/aom_highbd_dc_predictor_64x32 neon/;
   specialize qw/aom_highbd_dc_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_h_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_h_predictor_4x16 neon/;
   specialize qw/aom_highbd_h_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_h_predictor_8x32 neon/;
-  specialize qw/aom_highbd_h_predictor_16x4 neon/;
   specialize qw/aom_highbd_h_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_h_predictor_16x64 neon/;
-  specialize qw/aom_highbd_h_predictor_32x8 neon/;
   specialize qw/aom_highbd_h_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_h_predictor_32x64 neon/;
-  specialize qw/aom_highbd_h_predictor_64x16 neon/;
   specialize qw/aom_highbd_h_predictor_64x32 neon/;
   specialize qw/aom_highbd_h_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_dc_128_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_4x16 neon/;
   specialize qw/aom_highbd_dc_128_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_8x32 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_16x4 neon/;
   specialize qw/aom_highbd_dc_128_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_16x64 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_32x8 neon/;
   specialize qw/aom_highbd_dc_128_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_dc_128_predictor_32x64 neon/;
-  specialize qw/aom_highbd_dc_128_predictor_64x16 neon/;
   specialize qw/aom_highbd_dc_128_predictor_64x32 neon/;
   specialize qw/aom_highbd_dc_128_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_dc_left_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_4x16 neon/;
   specialize qw/aom_highbd_dc_left_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_8x32 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_16x4 neon/;
   specialize qw/aom_highbd_dc_left_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_16x64 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_32x8 neon/;
   specialize qw/aom_highbd_dc_left_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_dc_left_predictor_32x64 neon/;
-  specialize qw/aom_highbd_dc_left_predictor_64x16 neon/;
   specialize qw/aom_highbd_dc_left_predictor_64x32 neon/;
   specialize qw/aom_highbd_dc_left_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_dc_top_predictor_4x4 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_4x8 sse2 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_4x16 neon/;
   specialize qw/aom_highbd_dc_top_predictor_8x4 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_8x8 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_8x16 sse2 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_8x32 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_16x4 neon/;
   specialize qw/aom_highbd_dc_top_predictor_16x8 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_16x16 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_16x32 sse2 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_16x64 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_32x8 neon/;
   specialize qw/aom_highbd_dc_top_predictor_32x16 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_32x32 sse2 neon/;
   specialize qw/aom_highbd_dc_top_predictor_32x64 neon/;
-  specialize qw/aom_highbd_dc_top_predictor_64x16 neon/;
   specialize qw/aom_highbd_dc_top_predictor_64x32 neon/;
   specialize qw/aom_highbd_dc_top_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_paeth_predictor_4x4 neon/;
   specialize qw/aom_highbd_paeth_predictor_4x8 neon/;
-  specialize qw/aom_highbd_paeth_predictor_4x16 neon/;
   specialize qw/aom_highbd_paeth_predictor_8x4 neon/;
   specialize qw/aom_highbd_paeth_predictor_8x8 neon/;
   specialize qw/aom_highbd_paeth_predictor_8x16 neon/;
-  specialize qw/aom_highbd_paeth_predictor_8x32 neon/;
-  specialize qw/aom_highbd_paeth_predictor_16x4 neon/;
   specialize qw/aom_highbd_paeth_predictor_16x8 neon/;
   specialize qw/aom_highbd_paeth_predictor_16x16 neon/;
   specialize qw/aom_highbd_paeth_predictor_16x32 neon/;
-  specialize qw/aom_highbd_paeth_predictor_16x64 neon/;
-  specialize qw/aom_highbd_paeth_predictor_32x8 neon/;
   specialize qw/aom_highbd_paeth_predictor_32x16 neon/;
   specialize qw/aom_highbd_paeth_predictor_32x32 neon/;
   specialize qw/aom_highbd_paeth_predictor_32x64 neon/;
-  specialize qw/aom_highbd_paeth_predictor_64x16 neon/;
   specialize qw/aom_highbd_paeth_predictor_64x32 neon/;
   specialize qw/aom_highbd_paeth_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_smooth_predictor_4x4 neon/;
   specialize qw/aom_highbd_smooth_predictor_4x8 neon/;
-  specialize qw/aom_highbd_smooth_predictor_4x16 neon/;
   specialize qw/aom_highbd_smooth_predictor_8x4 neon/;
   specialize qw/aom_highbd_smooth_predictor_8x8 neon/;
   specialize qw/aom_highbd_smooth_predictor_8x16 neon/;
-  specialize qw/aom_highbd_smooth_predictor_8x32 neon/;
-  specialize qw/aom_highbd_smooth_predictor_16x4 neon/;
   specialize qw/aom_highbd_smooth_predictor_16x8 neon/;
   specialize qw/aom_highbd_smooth_predictor_16x16 neon/;
   specialize qw/aom_highbd_smooth_predictor_16x32 neon/;
-  specialize qw/aom_highbd_smooth_predictor_16x64 neon/;
-  specialize qw/aom_highbd_smooth_predictor_32x8 neon/;
   specialize qw/aom_highbd_smooth_predictor_32x16 neon/;
   specialize qw/aom_highbd_smooth_predictor_32x32 neon/;
   specialize qw/aom_highbd_smooth_predictor_32x64 neon/;
-  specialize qw/aom_highbd_smooth_predictor_64x16 neon/;
   specialize qw/aom_highbd_smooth_predictor_64x32 neon/;
   specialize qw/aom_highbd_smooth_predictor_64x64 neon/;
 
   specialize qw/aom_highbd_smooth_v_predictor_4x4 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_4x8 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_4x16 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_8x4 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_8x8 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_8x16 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_8x32 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_16x4 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_16x8 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_16x16 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_16x32 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_16x64 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_32x8 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_32x16 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_32x32 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_32x64 neon/;
-  specialize qw/aom_highbd_smooth_v_predictor_64x16 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_64x32 neon/;
   specialize qw/aom_highbd_smooth_v_predictor_64x64 neon/;
-
   specialize qw/aom_highbd_smooth_h_predictor_4x4 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_4x8 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_4x16 neon/;
+
   specialize qw/aom_highbd_smooth_h_predictor_8x4 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_8x8 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_8x16 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_8x32 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_16x4 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_16x8 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_16x16 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_16x32 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_16x64 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_32x8 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_32x16 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_32x32 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_32x64 neon/;
-  specialize qw/aom_highbd_smooth_h_predictor_64x16 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_64x32 neon/;
   specialize qw/aom_highbd_smooth_h_predictor_64x64 neon/;
+
+  if ((aom_config("CONFIG_REALTIME_ONLY") ne "yes") ||
+      (aom_config("CONFIG_AV1_DECODER") eq "yes")) {
+    specialize qw/aom_highbd_v_predictor_4x16 neon/;
+    specialize qw/aom_highbd_v_predictor_8x32 neon/;
+    specialize qw/aom_highbd_v_predictor_16x4 neon/;
+    specialize qw/aom_highbd_v_predictor_16x64 neon/;
+    specialize qw/aom_highbd_v_predictor_32x8 neon/;
+    specialize qw/aom_highbd_v_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_dc_predictor_4x16 neon/;
+    specialize qw/aom_highbd_dc_predictor_8x32 neon/;
+    specialize qw/aom_highbd_dc_predictor_16x4 neon/;
+    specialize qw/aom_highbd_dc_predictor_16x64 neon/;
+    specialize qw/aom_highbd_dc_predictor_32x8 neon/;
+    specialize qw/aom_highbd_dc_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_h_predictor_4x16 neon/;
+    specialize qw/aom_highbd_h_predictor_8x32 neon/;
+    specialize qw/aom_highbd_h_predictor_16x4 neon/;
+    specialize qw/aom_highbd_h_predictor_16x64 neon/;
+    specialize qw/aom_highbd_h_predictor_32x8 neon/;
+    specialize qw/aom_highbd_h_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_dc_128_predictor_4x16 neon/;
+    specialize qw/aom_highbd_dc_128_predictor_8x32 neon/;
+    specialize qw/aom_highbd_dc_128_predictor_16x4 neon/;
+    specialize qw/aom_highbd_dc_128_predictor_16x64 neon/;
+    specialize qw/aom_highbd_dc_128_predictor_32x8 neon/;
+    specialize qw/aom_highbd_dc_128_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_dc_left_predictor_4x16 neon/;
+    specialize qw/aom_highbd_dc_left_predictor_8x32 neon/;
+    specialize qw/aom_highbd_dc_left_predictor_16x4 neon/;
+    specialize qw/aom_highbd_dc_left_predictor_16x64 neon/;
+    specialize qw/aom_highbd_dc_left_predictor_32x8 neon/;
+    specialize qw/aom_highbd_dc_left_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_dc_top_predictor_4x16 neon/;
+    specialize qw/aom_highbd_dc_top_predictor_8x32 neon/;
+    specialize qw/aom_highbd_dc_top_predictor_16x4 neon/;
+    specialize qw/aom_highbd_dc_top_predictor_16x64 neon/;
+    specialize qw/aom_highbd_dc_top_predictor_32x8 neon/;
+    specialize qw/aom_highbd_dc_top_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_paeth_predictor_4x16 neon/;
+    specialize qw/aom_highbd_paeth_predictor_8x32 neon/;
+    specialize qw/aom_highbd_paeth_predictor_16x4 neon/;
+    specialize qw/aom_highbd_paeth_predictor_16x64 neon/;
+    specialize qw/aom_highbd_paeth_predictor_32x8 neon/;
+    specialize qw/aom_highbd_paeth_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_smooth_predictor_4x16 neon/;
+    specialize qw/aom_highbd_smooth_predictor_8x32 neon/;
+    specialize qw/aom_highbd_smooth_predictor_16x4 neon/;
+    specialize qw/aom_highbd_smooth_predictor_16x64 neon/;
+    specialize qw/aom_highbd_smooth_predictor_32x8 neon/;
+    specialize qw/aom_highbd_smooth_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_smooth_v_predictor_4x16 neon/;
+    specialize qw/aom_highbd_smooth_v_predictor_8x32 neon/;
+    specialize qw/aom_highbd_smooth_v_predictor_16x4 neon/;
+    specialize qw/aom_highbd_smooth_v_predictor_16x64 neon/;
+    specialize qw/aom_highbd_smooth_v_predictor_32x8 neon/;
+    specialize qw/aom_highbd_smooth_v_predictor_64x16 neon/;
+
+    specialize qw/aom_highbd_smooth_h_predictor_4x16 neon/;
+    specialize qw/aom_highbd_smooth_h_predictor_8x32 neon/;
+    specialize qw/aom_highbd_smooth_h_predictor_16x4 neon/;
+    specialize qw/aom_highbd_smooth_h_predictor_16x64 neon/;
+    specialize qw/aom_highbd_smooth_h_predictor_32x8 neon/;
+    specialize qw/aom_highbd_smooth_h_predictor_64x16 neon/;
+  }  # !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 }
 #
 # Sub Pixel Filters
@@ -797,8 +827,10 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   add_proto qw/uint64_t aom_var_2d_u8/, "uint8_t *src, int src_stride, int width, int height";
   specialize qw/aom_var_2d_u8 sse2 avx2 neon neon_dotprod/;
 
-  add_proto qw/uint64_t aom_var_2d_u16/, "uint8_t *src, int src_stride, int width, int height";
-  specialize qw/aom_var_2d_u16 sse2 avx2 neon sve/;
+  if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
+    add_proto qw/uint64_t aom_var_2d_u16/, "uint8_t *src, int src_stride, int width, int height";
+    specialize qw/aom_var_2d_u16 sse2 avx2 neon sve/;
+  }
 
   #
   # Single block SAD / Single block Avg SAD
@@ -1283,11 +1315,6 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
   add_proto qw/void aom_ssim_parms_8x8/, "const uint8_t *s, int sp, const uint8_t *r, int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr";
   specialize qw/aom_ssim_parms_8x8/, "$sse2_x86_64";
 
-  if (aom_config("CONFIG_INTERNAL_STATS") eq "yes") {
-    add_proto qw/void aom_ssim_parms_16x16/, "const uint8_t *s, int sp, const uint8_t *r, int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr";
-    specialize qw/aom_ssim_parms_16x16/, "$sse2_x86_64";
-  }
-
   if (aom_config("CONFIG_AV1_HIGHBITDEPTH") eq "yes") {
     add_proto qw/void aom_highbd_ssim_parms_8x8/, "const uint16_t *s, int sp, const uint16_t *r, int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr";
   }
@@ -1341,11 +1368,10 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
     }
   }
 
-  #
-  #
-  #
-  add_proto qw/unsigned int aom_get_mb_ss/, "const int16_t *";
-  specialize qw/aom_get_mb_ss sse2 neon/;
+  if (aom_config("CONFIG_REALTIME_ONLY") ne "yes") {
+    add_proto qw/unsigned int aom_get_mb_ss/, "const int16_t *";
+    specialize qw/aom_get_mb_ss sse2 neon/;
+  }
 
   #
   # Variance / Subpixel Variance / Subpixel Avg Variance
