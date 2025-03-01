@@ -24,7 +24,7 @@
 #include "av1/encoder/enc_enums.h"
 #include "av1/encoder/mcomp_structs.h"
 #if !CONFIG_REALTIME_ONLY
-#include "av1/encoder/partition_cnn.h"
+#include "av1/encoder/partition_cnn_weights.h"
 #endif
 
 #include "av1/encoder/hash_motion.h"
@@ -1327,6 +1327,10 @@ typedef struct macroblock {
 
   //! Threshold on the number of colors for testing palette mode.
   int color_palette_thresh;
+
+  //! Used in REALTIME coding mode: flag to indicate if the color_sensitivity
+  // should be checked at the coding block level.
+  int force_color_check_block_level;
 
   //! The buffer used by search_tx_type() to swap dqcoeff in macroblockd_plane
   // so we can keep dqcoeff of the best tx_type.
