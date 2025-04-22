@@ -24,7 +24,7 @@
 #include "av1/encoder/enc_enums.h"
 #include "av1/encoder/mcomp_structs.h"
 #if !CONFIG_REALTIME_ONLY
-#include "av1/encoder/partition_cnn.h"
+#include "av1/encoder/partition_cnn_weights.h"
 #endif
 
 #include "av1/encoder/hash_motion.h"
