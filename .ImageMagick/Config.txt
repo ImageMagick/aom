@@ -1,5 +1,23 @@
 [STATIC_LIBRARY]
 
+[VERSION]
+3.13.1
+
+[RELEASE_DATE]
+2025-09-05
+
+[PRODUCT_NAME]
+aom
+
+[COMPANY_NAME]
+Alliance for Open Media
+
+[URL]
+https://aomedia.googlesource.com/aom
+
+[COPYRIGHT]
+Copyright (c) 2016, Alliance for Open Media. All rights reserved.
+
 [LICENSE_FILE]
 LICENSE
 
