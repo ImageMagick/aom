@@ -365,7 +365,7 @@ class ResizeCrashTest : public ::libaom_test::CodecTestWithParam<int>,
                           libaom_test::Encoder *encoder) override {
     if (video->frame() == 0) {
       encoder->Control(AOME_SET_CPUUSED, cpu_used_);
-      encoder->Control(AOME_SET_TUNING, AOM_TUNE_SSIM);
+      encoder->Control(AOME_SET_TUNING, AOM_TUNE_IQ);
       encoder->Control(AOME_SET_CQ_LEVEL, first_frame_cq_level_);
       encoder->Control(AV1E_SET_ROW_MT, 1);
       encoder->Control(AV1E_SET_TILE_COLUMNS, first_tile_rows_cols_);
@@ -400,6 +400,7 @@ TEST_P(ResizeCrashTest, TestRestorationFilterCrash) {
   cfg_.g_input_bit_depth = 8;
   cfg_.g_threads = 14;
   cfg_.rc_end_usage = AOM_Q;
+  cfg_.use_fixed_qp_offsets = 2;
 
   first_frame_cq_level_ = 59;
   second_frame_cq_level_ = 59;
@@ -419,6 +420,7 @@ TEST_P(ResizeCrashTest, TestCompoundMaskPredictionCrash) {
   cfg_.g_input_bit_depth = 8;
   cfg_.g_threads = 4;
   cfg_.rc_end_usage = AOM_Q;
+  cfg_.use_fixed_qp_offsets = 2;
 
   first_frame_cq_level_ = 63;
   second_frame_cq_level_ = 50;
