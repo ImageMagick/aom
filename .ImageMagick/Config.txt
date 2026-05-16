@@ -51,7 +51,6 @@ av1\encoder\saliency_map.c
 av1\encoder\tune_vmaf.c
 av1\encoder\tune_butteraugli.c
 av1\encoder\x86\
-build\
 common\args.c
 common\av1_config.c
 common\ivfdec.c
@@ -72,9 +71,8 @@ examples\
 stats\
 test\
 third_party\googletest\
+third_party\highway\
 third_party\libwebm\
 third_party\libyuv\
-third_party\SVT-AV1\
-third_party\SVT-AV1\
 third_party\x86inc\
 tools\
