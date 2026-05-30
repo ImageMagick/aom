@@ -1025,16 +1025,17 @@ static aom_codec_err_t validate_img(aom_codec_alg_priv_t *ctx,
     const int max_val = 1 << bit_depth;
     // Note there is no high bitdepth version of NV12 defined. If one is
     // added, `num_planes` should be 2 in that case.
-    const int num_planes = img->monochrome ? 1 : 3;
+    const int num_planes = ctx->cfg.monochrome ? 1 : 3;
     for (int plane = 0; plane < num_planes; ++plane) {
       const unsigned short *src = (const unsigned short *)img->planes[plane];
+      if (!src) return AOM_CODEC_INVALID_PARAM;
       const unsigned int stride = img->stride[plane] / 2;
       const unsigned int ph = aom_img_plane_height(img, plane);
       const unsigned int pw = aom_img_plane_width(img, plane);
       for (unsigned int i = 0; i < ph; ++i) {
         for (unsigned int j = 0; j < pw; ++j) {
           if (src[j] >= max_val) {
-            return AOM_CODEC_INVALID_PARAM;
+            ERROR("Input pixel value out of range for encoder bit depth");
           }
         }
         src += stride;
@@ -3313,15 +3314,21 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
       //
       // For pseudo random input, the compressed frame size is seen to exceed
       // the uncompressed frame size, but is less than 2 times the uncompressed
-      // frame size. Hence the size of the buffer is chosen as 2 times the
-      // uncompressed frame size.
-      int multiplier = 8;
+      // frame size. https://issues.oss-fuzz.com/issues/514006304 further shows
+      // that multithreaded bitstream packing may need more than 2 times the
+      // uncompressed frame size. Hence the size of the buffer is chosen as 2.5
+      // times the uncompressed frame size.
+      aom_rational_t multiplier;
+      multiplier.num = 8;
+      multiplier.den = 1;
       if (ppi->cpi->oxcf.kf_cfg.key_freq_max == 0 &&
-          !ppi->cpi->oxcf.kf_cfg.fwd_kf_enabled)
-        multiplier = 2;
-      if (uncompressed_frame_sz > SIZE_MAX / multiplier)
+          !ppi->cpi->oxcf.kf_cfg.fwd_kf_enabled) {
+        multiplier.num = 5;
+        multiplier.den = 2;
+      }
+      if (uncompressed_frame_sz > SIZE_MAX / multiplier.num)
         return AOM_CODEC_MEM_ERROR;
-      size_t data_sz = uncompressed_frame_sz * multiplier;
+      size_t data_sz = uncompressed_frame_sz * multiplier.num / multiplier.den;
       if (data_sz < kMinCompressedSize) data_sz = kMinCompressedSize;
       if (ctx->cx_data == NULL || ctx->cx_data_sz < data_sz) {
         ctx->cx_data_sz = data_sz;
