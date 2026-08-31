@@ -9,14 +9,9 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#ifndef AOM_VERSION_H_
-#define AOM_VERSION_H_
-#define VERSION_MAJOR 3
-#define VERSION_MINOR 14
-#define VERSION_PATCH 1
-#define VERSION_EXTRA ""
-#define VERSION_PACKED \
-  ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))
-#define VERSION_STRING_NOSP "v3.14.1"
-#define VERSION_STRING " v3.14.1"
-#endif  // AOM_VERSION_H_
+#define HWY_BASELINE_TARGETS HWY_AVX3_DL
+#define HWY_BROKEN_32BIT 0
+
+#include "aom_dsp/convolve_hwy.h"
+
+CONVOLVE8HORIZ(avx512)

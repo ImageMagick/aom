@@ -24,7 +24,7 @@
 #include "av1/encoder/enc_enums.h"
 #include "av1/encoder/mcomp_structs.h"
 #if !CONFIG_REALTIME_ONLY
-#include "av1/encoder/partition_cnn.h"
+#include "av1/encoder/partition_cnn_weights.h"
 #endif
 
 #include "av1/encoder/hash_motion.h"
@@ -1438,6 +1438,22 @@ typedef struct macroblock {
    */
   RD_STATS *rdcost;
 #endif  // CONFIG_PARTITION_SEARCH_ORDER
+
+  /*! \brief Signed vertical distance, in pixels, from the bottom edge of the
+   *  current prediction block to the bottom edge of the frame.
+   *
+   *  The value may be negative when the prediction block extends beyond the
+   *  bottom edge of the frame.
+   */
+  int pix_to_bottom_edge;
+
+  /*! \brief Signed horizontal distance, in pixels, from the right edge of the
+   *  current prediction block to the right edge of the frame.
+   *
+   *  The value may be negative when the prediction block extends beyond the
+   *  right edge of the frame.
+   */
+  int pix_to_right_edge;
 } MACROBLOCK;
 #undef SINGLE_REF_MODES
 
